@@ -1,0 +1,60 @@
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ---------- Terraform ----------
+# Never commit state or plans: they contain resource IDs and can leak secrets.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+# Variable files may contain credentials or account-specific values.
+*.tfvars
+*.tfvars.json
+# Allow committed example variable files.
+!*.example.tfvars
+# Lock files SHOULD be committed for reproducible provider versions.
+!.terraform.lock.hcl
+# Terraform override files are for local experimentation only.
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ---------- Environment / secrets ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+kubeconfig
+kubeconfig.*
+
+# ---------- Docker ----------
+*.tar
+
+# ---------- Helm ----------
+# Packaged charts are build artifacts, not source.
+*.tgz
+
+# ---------- IDE / OS ----------
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
