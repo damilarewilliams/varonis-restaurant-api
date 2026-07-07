@@ -1,0 +1,23 @@
+# Keep the build context minimal: faster builds, no accidental
+# secrets or infra files inside the image.
+.git
+.github
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.mypy_cache
+tests
+terraform
+helm
+scripts
+docs
+*.md
+.env
+.env.*
+.editorconfig
+.gitignore
+Dockerfile
+docker-compose*.yml

@@ -1,0 +1,25 @@
+# Local development stack.
+#
+#   docker compose up --build          → API only (in-memory data, no AWS)
+#   docker compose --profile dynamodb up --build
+#                                      → API + DynamoDB Local
+#
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8000"
+    environment:
+      APP_ENVIRONMENT: local
+      APP_LOG_LEVEL: INFO
+      # memory = zero AWS dependencies for local dev
+      APP_REPOSITORY_BACKEND: memory
+
+  # Optional: run against DynamoDB Local to exercise the real repository.
+  # Requires a seeded table (scripts/ gains a seeder in Issue #9).
+  dynamodb-local:
+    profiles: ["dynamodb"]
+    image: amazon/dynamodb-local:latest
+    command: "-jar DynamoDBLocal.jar -inMemory -sharedDb"
+    ports:
+      - "8000:8000"
