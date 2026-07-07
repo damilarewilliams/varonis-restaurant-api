@@ -11,7 +11,7 @@ humans approve, pipelines execute.
 ```
 GitHub (source of truth)
   └─> GitHub Actions CI/CD
-        ├─ App CI: lint → static analysis → unit tests
+        ├─ App CI: lint → static analysis → (Could use pre-commit hooks as well)
         ├─ Terraform: fmt → validate → plan → [manual approval] → apply → verify
         └─ Delivery: docker build → Trivy scan → push image
                       → bump Helm values.yaml → commit
