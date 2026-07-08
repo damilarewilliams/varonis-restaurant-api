@@ -145,3 +145,40 @@ must declare `runs-on` with the ARC runner group label. Runner pods need
 resource requests/limits and should be restricted (non-root, no privileged
 containers). If the cluster is down, CD jobs queue until ARC returns —
 Terraform and CI are unaffected.
+
+---
+
+## ADR-006: Terraform remote state in S3 with native lockfile locking
+
+**Date:** 2026-07-08 · **Status:** Accepted
+
+**Context.** Terraform state must be shared between engineers and CI, must
+survive laptops, and must be protected against concurrent applies. State can
+contain sensitive values, so it needs encryption and access control.
+
+**Options.**
+1. **Local state committed to Git** — never: secrets in Git, merge conflicts,
+   no locking.
+2. **S3 + DynamoDB lock table** — the long-standing standard; requires
+   provisioning and paying for a lock table whose only job is locking.
+3. **S3 with native lockfile (`use_lockfile`)** — Terraform >= 1.10 locks via
+   a conditional-write lock object in the same bucket. Same concurrency
+   protection, one less resource.
+4. Terraform Cloud/HCP — external dependency and account beyond the
+   assignment's AWS scope.
+
+**Decision.** Option 3. The state bucket is versioned (state history =
+rollback), KMS-encrypted (state is sensitive), and public-access-blocked.
+`required_version >= 1.10.0` is enforced in `versions.tf`.
+
+**Bootstrap exception.** The state bucket cannot be managed by the state it
+stores. It is the single resource created outside Terraform, via four
+documented CLI commands in `backend.tf`. Alternatives (a separate bootstrap
+Terraform config with local state) add moving parts without adding safety at
+this scale.
+
+**Consequences.** Anyone running Terraform needs >= 1.10 locally. The AWS
+provider is constrained to a bounded range with the exact version pinned by
+the committed `.terraform.lock.hcl`. Environments/modules split (see
+`terraform/README.md`): modules are environment-agnostic building blocks;
+adding staging/prod is a new composition root, not copied resources.

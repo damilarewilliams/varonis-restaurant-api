@@ -1,0 +1,84 @@
+# dev environment — module composition root.
+#
+# Each module call below is enabled by the issue that implements the
+# module. Keeping the wiring visible-but-commented documents the target
+# architecture while letting `terraform validate` pass at every commit.
+
+# ---------------------------------------------------------------------------
+# Issue #6 — Provision AWS Networking
+# ---------------------------------------------------------------------------
+# module "networking" {
+#   source = "../../modules/networking"
+#
+#   project            = var.project
+#   environment        = var.environment
+#   vpc_cidr           = "10.0.0.0/16"
+#   az_count           = 3
+#   single_nat_gateway = true # dev cost mode; false = one NAT per AZ
+# }
+
+# ---------------------------------------------------------------------------
+# Issue #7 — Provision Amazon EKS
+# ---------------------------------------------------------------------------
+# module "eks" {
+#   source = "../../modules/eks"
+#
+#   project            = var.project
+#   environment        = var.environment
+#   vpc_id             = module.networking.vpc_id
+#   private_subnet_ids = module.networking.private_subnet_ids
+# }
+
+# ---------------------------------------------------------------------------
+# Issue #8 — Provision Amazon ECR
+# ---------------------------------------------------------------------------
+# module "ecr" {
+#   source = "../../modules/ecr"
+#
+#   project     = var.project
+#   environment = var.environment
+# }
+
+# ---------------------------------------------------------------------------
+# Issue #9 — Provision DynamoDB
+# ---------------------------------------------------------------------------
+# module "dynamodb" {
+#   source = "../../modules/dynamodb"
+#
+#   project     = var.project
+#   environment = var.environment
+#   kms_key_arn = module.kms.key_arn
+# }
+
+# ---------------------------------------------------------------------------
+# Issue #10 — Provision IAM Roles and Policies
+# ---------------------------------------------------------------------------
+# module "iam" {
+#   source = "../../modules/iam"
+#
+#   project             = var.project
+#   environment         = var.environment
+#   oidc_provider_arn   = module.eks.oidc_provider_arn
+#   dynamodb_table_arns = [module.dynamodb.table_arn]
+# }
+
+# ---------------------------------------------------------------------------
+# Issue #11 — Provision Logging Infrastructure
+# ---------------------------------------------------------------------------
+# module "logging" {
+#   source = "../../modules/logging"
+#
+#   project     = var.project
+#   environment = var.environment
+#   kms_key_arn = module.kms.key_arn
+# }
+
+# ---------------------------------------------------------------------------
+# KMS keys (created early; DynamoDB and logging depend on them) — Issue #9/#11
+# ---------------------------------------------------------------------------
+# module "kms" {
+#   source = "../../modules/kms"
+#
+#   project     = var.project
+#   environment = var.environment
+# }
