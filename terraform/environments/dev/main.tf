@@ -120,3 +120,18 @@ module "logging" {
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
 }
+
+# ---------------------------------------------------------------------------
+# Issue #13 — Configure ArgoCD GitOps Deployment (ADR-004)
+# ---------------------------------------------------------------------------
+module "argocd" {
+  source = "../../modules/argocd"
+
+  project     = var.project
+  environment = var.environment
+  repo_url    = "https://github.com/damilarewilliams/varonis-restaurant-api.git"
+
+  # The node group must exist before pods can schedule; helm provider
+  # auth also requires the cluster to be fully up.
+  depends_on = [module.eks]
+}

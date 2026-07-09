@@ -18,3 +18,21 @@ provider "aws" {
     }
   }
 }
+
+# Helm provider — targets the EKS cluster Terraform itself created.
+# Auth uses `aws eks get-token` (exec plugin): short-lived tokens from the
+# caller's IAM identity, no kubeconfig file dependency. This is how
+# Terraform installs in-cluster platform components (ArgoCD, ADR-004)
+# while remaining the bootstrap tool that works before ArgoCD exists.
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    }
+  }
+}

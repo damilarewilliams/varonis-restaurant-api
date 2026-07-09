@@ -14,5 +14,11 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.70, < 7.0"
     }
+    # ~> 2.17 pins the provider major: 3.x changed the kubernetes
+    # connection block syntax; upgrade deliberately, not by accident.
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.17"
+    }
   }
 }
