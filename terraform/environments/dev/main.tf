@@ -114,8 +114,8 @@ module "kms_logs" {
 module "logging" {
   source = "../../modules/logging"
 
-  project           = var.project
-  environment       = var.environment
+  project     = var.project
+  environment = var.environment
   kms_key_arn       = module.kms_logs.key_arn
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
