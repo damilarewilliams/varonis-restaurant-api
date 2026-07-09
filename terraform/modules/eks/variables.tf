@@ -41,6 +41,23 @@ variable "endpoint_public_access_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
+variable "log_group_kms_key_arn" {
+  description = <<-EOT
+    CMK for the control-plane log group. The group is created HERE, before
+    the cluster: if EKS creates it implicitly instead, it gets no
+    encryption and no retention. Empty string = unencrypted (not
+    recommended; dev passes the logs CMK).
+  EOT
+  type        = string
+  default     = ""
+}
+
+variable "log_retention_in_days" {
+  description = "Retention for the control-plane log group"
+  type        = number
+  default     = 30
+}
+
 variable "cluster_log_types" {
   description = "Control plane log types shipped to CloudWatch (audit trail for the API server)"
   type        = list(string)

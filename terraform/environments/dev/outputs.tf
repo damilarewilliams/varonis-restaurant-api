@@ -70,3 +70,13 @@ output "gha_terraform_role_arn" {
   description = "CI role for terraform plan/apply (set as GitHub Actions variable)"
   value       = module.iam.gha_terraform_role_arn
 }
+
+output "app_log_group_name" {
+  description = "Application log group (Fluent Bit output destination)"
+  value       = module.logging.app_log_group_name
+}
+
+output "log_shipper_role_arn" {
+  description = "IRSA role for the Fluent Bit ServiceAccount annotation"
+  value       = module.logging.shipper_role_arn
+}
