@@ -250,7 +250,13 @@ data "aws_iam_policy_document" "gha_terraform_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:environment:${var.terraform_apply_environment}"]
+      # Plan runs in an unprotected environment; apply in the protected
+      # one (required reviewers). Same role: the protection difference is
+      # enforced by GitHub, the credential scope stays identical.
+      values = [
+        "repo:${var.github_repository}:environment:${var.terraform_plan_environment}",
+        "repo:${var.github_repository}:environment:${var.terraform_apply_environment}",
+      ]
     }
   }
 }

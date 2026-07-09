@@ -61,6 +61,12 @@ variable "github_repository" {
   type        = string
 }
 
+variable "terraform_plan_environment" {
+  description = "Unprotected GitHub Environment whose jobs may run terraform plan"
+  type        = string
+  default     = "dev-infra-plan"
+}
+
 variable "terraform_apply_environment" {
   description = "GitHub Environment name whose jobs may assume the Terraform role (plan/apply gate, Issue #15)"
   type        = string

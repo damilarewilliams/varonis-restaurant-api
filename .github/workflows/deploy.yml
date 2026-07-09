@@ -1,0 +1,257 @@
+# Deploy — runs on every merge to main.
+#
+#   infra changed:  plan -> [human approval: dev-infra environment] -> apply -> verify
+#   app changed:    build -> Trivy gate -> push to ECR -> bump values.yaml -> ArgoCD deploys
+#   always after a delivery: CD verification on the in-cluster ARC runner
+#
+# AWS auth is OIDC-only (ADR-008): role ARNs live in Actions *variables*
+# (not secrets — they are not secret), no AWS keys exist in GitHub.
+#
+# Required repo configuration (one-time, documented in Issue #15):
+#   Variables: AWS_REGION, AWS_TERRAFORM_ROLE_ARN, AWS_DELIVERY_ROLE_ARN, ECR_REPOSITORY
+#   Environments: dev-infra-plan (unprotected), dev-infra (required reviewers)
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write # OIDC token for AWS role assumption
+  contents: write # values.yaml bump commit
+
+# One deploy at a time; never cancel a half-finished apply.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  # -------------------------------------------------------------------------
+  # What changed? Drives which legs of the pipeline run.
+  # -------------------------------------------------------------------------
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      infra: ${{ steps.filter.outputs.infra }}
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            infra:
+              - 'terraform/**'
+            app:
+              - 'app/**'
+              - 'Dockerfile'
+              - 'pyproject.toml'
+
+  # -------------------------------------------------------------------------
+  # Terraform: plan (unprotected env) -> approval gate -> apply (protected)
+  # -------------------------------------------------------------------------
+  terraform-plan:
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    environment: dev-infra-plan
+    defaults:
+      run:
+        working-directory: terraform/environments/dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+          terraform_wrapper: false
+
+      - run: terraform fmt -check -recursive ../..
+
+      - run: terraform init -input=false
+
+      - run: terraform validate
+
+      - name: Plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Plan summary
+        run: |
+          echo '## Terraform plan' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          terraform show -no-color tfplan | tail -60 >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # The apply job applies THIS artifact — the exact plan a human
+      # reviews, not a fresh plan that could differ.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/environments/dev/tfplan
+          retention-days: 5
+
+  terraform-apply:
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    # The protected environment: GitHub pauses here until a required
+    # reviewer approves (Issue #15). Approval == permission to apply.
+    environment: dev-infra
+    defaults:
+      run:
+        working-directory: terraform/environments/dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+          terraform_wrapper: false
+
+      - run: terraform init -input=false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/environments/dev
+
+      - name: Apply the reviewed plan
+        run: terraform apply -input=false tfplan
+
+      - name: Infrastructure verification
+        run: |
+          echo '## Infrastructure verification' >> "$GITHUB_STEP_SUMMARY"
+          CLUSTER=$(terraform output -raw eks_cluster_name)
+          STATUS=$(aws eks describe-cluster --name "$CLUSTER" --query cluster.status --output text)
+          echo "EKS cluster $CLUSTER: $STATUS" >> "$GITHUB_STEP_SUMMARY"
+          test "$STATUS" = "ACTIVE"
+          terraform output >> "$GITHUB_STEP_SUMMARY"
+
+  # -------------------------------------------------------------------------
+  # Delivery: build -> scan gate -> push -> GitOps bump
+  # -------------------------------------------------------------------------
+  build-deliver:
+    needs: [changes, terraform-apply]
+    # Run when app changed, whether or not the terraform leg ran —
+    # but never after a failed apply (don't deploy onto broken infra).
+    if: >
+      always() &&
+      needs.changes.outputs.app == 'true' &&
+      (needs.terraform-apply.result == 'success' || needs.terraform-apply.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DELIVERY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Build image
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
+        run: docker build -t "$IMAGE" .
+
+      # DevSecOps gate: HIGH/CRITICAL vulnerabilities fail the pipeline
+      # BEFORE the image reaches the registry. ECR scan-on-push is the
+      # second, continuous layer behind this.
+      - name: Trivy scan (gate)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      - name: Push image
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
+        run: docker push "$IMAGE"
+
+      # GitOps handoff: the pipeline's ONLY deployment action is this
+      # commit. ArgoCD does the rest (ADR-004). [skip ci] prevents the
+      # commit from re-triggering this workflow.
+      - name: Update Helm values (GitOps)
+        env:
+          REPOSITORY: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
+          TAG: ${{ github.sha }}
+        run: |
+          yq -i '.image.repository = strenv(REPOSITORY) | .image.tag = strenv(TAG)' \
+            helm/restaurant-api/values.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add helm/restaurant-api/values.yaml
+          git commit -m "chore(gitops): deploy ${TAG} [skip ci]"
+          git pull --rebase origin main
+          git push origin main
+
+  # -------------------------------------------------------------------------
+  # CD verification — runs INSIDE the cluster on an ephemeral ARC runner
+  # (ADR-005): rollout wait, health/readiness, smoke tests against the
+  # Service DNS. Read-only cluster access (view, namespaced — Issue #10).
+  # -------------------------------------------------------------------------
+  cd-verify:
+    needs: build-deliver
+    runs-on: arc-cd
+    env:
+      APP_NAME: varonis-restaurant-api-dev
+      APP_NS: restaurant-api
+    steps:
+      - name: Install kubectl + aws cli
+        run: |
+          curl -sLo /tmp/kubectl "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x /tmp/kubectl && sudo mv /tmp/kubectl /usr/local/bin/ 2>/dev/null || mv /tmp/kubectl "$HOME/kubectl"
+          command -v aws || { curl -sL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/aws.zip && unzip -q /tmp/aws.zip -d /tmp && /tmp/aws/install -i "$HOME/aws-cli" -b "$HOME/bin"; }
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME" >> "$GITHUB_PATH"
+
+      - name: Kubeconfig (IRSA — no stored credentials)
+        run: aws eks update-kubeconfig --name "$APP_NAME" --region "${{ vars.AWS_REGION }}"
+
+      - name: Wait for ArgoCD to converge the new tag
+        run: |
+          for i in $(seq 1 60); do
+            CURRENT=$(kubectl -n "$APP_NS" get deploy "$APP_NAME" \
+              -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)
+            echo "attempt $i: deployed image = ${CURRENT:-<none>}"
+            [ -n "$CURRENT" ] && echo "$CURRENT" | grep -q "${{ github.sha }}" && exit 0
+            sleep 10
+          done
+          echo "ArgoCD did not converge to ${{ github.sha }} within 10 minutes" >&2
+          exit 1
+
+      - name: Wait for rollout
+        run: kubectl -n "$APP_NS" rollout status "deployment/$APP_NAME" --timeout=300s
+
+      - name: Health + readiness validation
+        run: |
+          BASE="http://$APP_NAME.$APP_NS.svc.cluster.local"
+          curl -fsS "$BASE/health/live"  | grep -q '"ok"'
+          curl -fsS "$BASE/health/ready" | grep -q '"ready"'
+
+      - name: Smoke tests
+        run: |
+          BASE="http://$APP_NAME.$APP_NS.svc.cluster.local"
+          BODY=$(curl -fsS "$BASE/api/v1/recommendations?style=italian&vegetarian=true")
+          echo "$BODY" | grep -q restaurantRecommendation
+          curl -fsS -o /dev/null -w '%{http_code}' \
+            "$BASE/api/v1/recommendations?vegetarian=maybe" | grep -q 422
+
+      - name: Deployment success
+        run: |
+          echo "## Deployment verified ✅" >> "$GITHUB_STEP_SUMMARY"
+          echo "Image ${{ github.sha }} live, healthy, and serving." >> "$GITHUB_STEP_SUMMARY"
