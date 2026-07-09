@@ -80,3 +80,8 @@ output "log_shipper_role_arn" {
   description = "IRSA role for the Fluent Bit ServiceAccount annotation"
   value       = module.logging.shipper_role_arn
 }
+
+output "argocd_application_name" {
+  description = "ArgoCD Application name (CD verification: argocd app wait <name>)"
+  value       = module.argocd.application_name
+}
