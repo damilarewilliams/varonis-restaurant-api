@@ -27,14 +27,25 @@ module "networking" {
 # ---------------------------------------------------------------------------
 # Issue #7 — Provision Amazon EKS
 # ---------------------------------------------------------------------------
-# module "eks" {
-#   source = "../../modules/eks"
-#
-#   project            = var.project
-#   environment        = var.environment
-#   vpc_id             = module.networking.vpc_id
-#   private_subnet_ids = module.networking.private_subnet_ids
-# }
+module "eks" {
+  source = "../../modules/eks"
+
+  project            = var.project
+  environment        = var.environment
+  vpc_id             = module.networking.vpc_id
+  private_subnet_ids = module.networking.private_subnet_ids
+
+  # dev sizing: 2 small nodes, room to scale to 4.
+  node_instance_types = ["t3.medium"]
+  node_min_size       = 2
+  node_desired_size   = 2
+  node_max_size       = 4
+
+  # Public endpoint for GitHub-hosted runners + local kubectl.
+  # TODO: narrow to known CIDRs; private-only is the hardened posture.
+  endpoint_public_access       = true
+  endpoint_public_access_cidrs = ["0.0.0.0/0"]
+}
 
 # ---------------------------------------------------------------------------
 # Issue #8 — Provision Amazon ECR
