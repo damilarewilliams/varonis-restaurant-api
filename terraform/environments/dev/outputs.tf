@@ -35,3 +35,8 @@ output "eks_oidc_provider_arn" {
   description = "OIDC provider ARN for IRSA roles (Issue #10)"
   value       = module.eks.oidc_provider_arn
 }
+
+output "ecr_repository_url" {
+  description = "ECR repository URL (docker push target, Helm image.repository)"
+  value       = module.ecr.repository_url
+}

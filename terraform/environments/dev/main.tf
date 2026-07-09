@@ -50,12 +50,12 @@ module "eks" {
 # ---------------------------------------------------------------------------
 # Issue #8 — Provision Amazon ECR
 # ---------------------------------------------------------------------------
-# module "ecr" {
-#   source = "../../modules/ecr"
-#
-#   project     = var.project
-#   environment = var.environment
-# }
+module "ecr" {
+  source = "../../modules/ecr"
+
+  project     = var.project
+  environment = var.environment
+}
 
 # ---------------------------------------------------------------------------
 # Issue #9 — Provision DynamoDB
