@@ -40,3 +40,13 @@ output "ecr_repository_url" {
   description = "ECR repository URL (docker push target, Helm image.repository)"
   value       = module.ecr.repository_url
 }
+
+output "dynamodb_table_name" {
+  description = "Restaurants table name (app env var APP_DYNAMODB_TABLE)"
+  value       = module.dynamodb.table_name
+}
+
+output "dynamodb_table_arn" {
+  description = "Restaurants table ARN (IRSA policy scope, Issue #10)"
+  value       = module.dynamodb.table_arn
+}
