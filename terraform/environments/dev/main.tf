@@ -114,8 +114,8 @@ module "kms_logs" {
 module "logging" {
   source = "../../modules/logging"
 
-  project     = var.project
-  environment = var.environment
+  project           = var.project
+  environment       = var.environment
   kms_key_arn       = module.kms_logs.key_arn
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
@@ -133,5 +133,22 @@ module "argocd" {
 
   # The node group must exist before pods can schedule; helm provider
   # auth also requires the cluster to be fully up.
+  depends_on = [module.eks]
+}
+
+# ---------------------------------------------------------------------------
+# Issue #14 — ARC self-hosted runners for CD jobs (ADR-005)
+# ---------------------------------------------------------------------------
+module "arc" {
+  count = var.arc_github_token != "" ? 1 : 0
+
+  source = "../../modules/arc"
+
+  project               = var.project
+  environment           = var.environment
+  github_repository_url = "https://github.com/damilarewilliams/varonis-restaurant-api"
+  github_token          = var.arc_github_token
+  runner_role_arn       = module.iam.runner_role_arn
+
   depends_on = [module.eks]
 }
