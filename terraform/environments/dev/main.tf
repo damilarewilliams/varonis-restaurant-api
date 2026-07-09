@@ -7,15 +7,22 @@
 # ---------------------------------------------------------------------------
 # Issue #6 — Provision AWS Networking
 # ---------------------------------------------------------------------------
-# module "networking" {
-#   source = "../../modules/networking"
-#
-#   project            = var.project
-#   environment        = var.environment
-#   vpc_cidr           = "10.0.0.0/16"
-#   az_count           = 3
-#   single_nat_gateway = true # dev cost mode; false = one NAT per AZ
-# }
+module "networking" {
+  source = "../../modules/networking"
+
+  project     = var.project
+  environment = var.environment
+  vpc_cidr    = "10.0.0.0/16"
+  az_count    = 3
+
+  # dev cost mode: one shared NAT (~$32/mo) instead of one per AZ.
+  # Production would set this false for AZ-fault-isolated egress.
+  single_nat_gateway = true
+
+  # Deterministic cluster name (created in Issue #7); enables the
+  # kubernetes.io/cluster subnet tags for LB subnet discovery now.
+  cluster_name = "${var.project}-${var.environment}"
+}
 
 # ---------------------------------------------------------------------------
 # Issue #7 — Provision Amazon EKS
