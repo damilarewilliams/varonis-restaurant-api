@@ -76,6 +76,22 @@ resource "aws_iam_role_policy_attachment" "node" {
 }
 
 # ---------------------------------------------------------------------------
+# Control-plane log group — created BEFORE the cluster. If EKS creates it
+# implicitly on first api/audit log, it gets no encryption and no
+# retention; pre-creating it means the audit trail is CMK-encrypted and
+# bounded from the first byte.
+# ---------------------------------------------------------------------------
+resource "aws_cloudwatch_log_group" "control_plane" {
+  name              = "/aws/eks/${local.cluster_name}/cluster"
+  retention_in_days = var.log_retention_in_days
+  kms_key_id        = var.log_group_kms_key_arn != "" ? var.log_group_kms_key_arn : null
+
+  tags = {
+    Name = "${local.cluster_name}-control-plane-logs"
+  }
+}
+
+# ---------------------------------------------------------------------------
 # Cluster
 # ---------------------------------------------------------------------------
 resource "aws_eks_cluster" "this" {
@@ -101,8 +117,12 @@ resource "aws_eks_cluster" "this" {
   # API-server audit trail to CloudWatch — part of the logging story.
   enabled_cluster_log_types = var.cluster_log_types
 
-  # IAM changes must settle before/after the cluster, or destroys wedge.
-  depends_on = [aws_iam_role_policy_attachment.cluster]
+  # IAM must settle before/after the cluster (destroys wedge otherwise);
+  # the log group must pre-exist so control-plane logs land encrypted.
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster,
+    aws_cloudwatch_log_group.control_plane,
+  ]
 }
 
 # ---------------------------------------------------------------------------
