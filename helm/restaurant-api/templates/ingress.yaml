@@ -1,0 +1,30 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "restaurant-api.fullname" . }}
+  labels:
+    {{- include "restaurant-api.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  # ALB annotations: the AWS Load Balancer Controller reads these and
+  # provisions an internet-facing ALB in the tagged public subnets,
+  # targeting pod IPs directly (target-type: ip).
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host | quote }}
+      {{- end }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "restaurant-api.fullname" . }}
+                port:
+                  name: http
+{{- end }}

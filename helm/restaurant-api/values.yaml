@@ -1,0 +1,96 @@
+# Default values. CI owns image.tag (updated on every delivery, ADR-004);
+# everything else is reviewed human configuration.
+#
+# NOTE on namespaces: the chart does not template a Namespace object.
+# ArgoCD creates it via the CreateNamespace=true sync option (Issue #13) —
+# the namespace's lifecycle belongs to the platform, not the app chart.
+
+replicaCount: 2
+
+image:
+  # Set by Terraform outputs / CI: <account>.dkr.ecr.<region>.amazonaws.com/varonis-restaurant-api-dev
+  repository: ""
+  # Set by CI on every delivery (git SHA). Never "latest": immutable tags
+  # are what make GitOps rollback trustworthy (ADR-007).
+  tag: ""
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: restaurant-api
+  # IRSA: annotate with the api role from terraform output api_irsa_role_arn
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::<account>:role/varonis-restaurant-api-dev-api
+  annotations: {}
+
+# Non-sensitive runtime configuration -> ConfigMap -> env vars.
+config:
+  environment: production
+  logLevel: INFO
+  repositoryBackend: dynamodb
+  awsRegion: us-east-1
+  # terraform output dynamodb_table_name
+  dynamodbTable: varonis-restaurant-api-dev-restaurants
+
+# Sensitive values -> Secret. Empty by default: real values are injected
+# out-of-band (kubectl create secret / external-secrets), never committed.
+secret:
+  create: false
+  data: {}
+
+# Additional env vars (name/value or valueFrom), merged into the container.
+extraEnv: []
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health/live
+  # Empty host = match all (dev). Set a real hostname when DNS exists.
+  host: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+probes:
+  liveness:
+    path: /health/live
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /health/ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+# Pod- and container-level hardening, matching the Dockerfile (UID 10001).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]

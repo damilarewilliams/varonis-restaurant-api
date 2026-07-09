@@ -4,10 +4,6 @@
 # identity. Masking already happened in-process (app/core/logging.py) —
 # this module is the encrypted, access-controlled destination.
 
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
 locals {
   name_prefix        = "${var.project}-${var.environment}"
   app_log_group_name = "/${var.project}/${var.environment}/application"
