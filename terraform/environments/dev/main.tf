@@ -58,15 +58,26 @@ module "ecr" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #9 — Provision DynamoDB
+# Issue #9 — Provision DynamoDB (+ the data CMK it encrypts with)
 # ---------------------------------------------------------------------------
-# module "dynamodb" {
-#   source = "../../modules/dynamodb"
-#
-#   project     = var.project
-#   environment = var.environment
-#   kms_key_arn = module.kms.key_arn
-# }
+module "kms_data" {
+  source = "../../modules/kms"
+
+  project     = var.project
+  environment = var.environment
+  purpose     = "data"
+}
+
+module "dynamodb" {
+  source = "../../modules/dynamodb"
+
+  project     = var.project
+  environment = var.environment
+  kms_key_arn = module.kms_data.key_arn
+
+  # dev: allow terraform destroy to work; production keeps this true.
+  deletion_protection = false
+}
 
 # ---------------------------------------------------------------------------
 # Issue #10 — Provision IAM Roles and Policies
@@ -81,22 +92,22 @@ module "ecr" {
 # }
 
 # ---------------------------------------------------------------------------
-# Issue #11 — Provision Logging Infrastructure
+# Issue #11 — Provision Logging Infrastructure (own CMK: separate blast
+# radius from the data key; needs the CloudWatch Logs service grant)
 # ---------------------------------------------------------------------------
+# module "kms_logs" {
+#   source = "../../modules/kms"
+#
+#   project               = var.project
+#   environment           = var.environment
+#   purpose               = "logs"
+#   allow_cloudwatch_logs = true
+# }
+#
 # module "logging" {
 #   source = "../../modules/logging"
 #
 #   project     = var.project
 #   environment = var.environment
-#   kms_key_arn = module.kms.key_arn
-# }
-
-# ---------------------------------------------------------------------------
-# KMS keys (created early; DynamoDB and logging depend on them) — Issue #9/#11
-# ---------------------------------------------------------------------------
-# module "kms" {
-#   source = "../../modules/kms"
-#
-#   project     = var.project
-#   environment = var.environment
+#   kms_key_arn = module.kms_logs.key_arn
 # }
