@@ -182,3 +182,34 @@ provider is constrained to a bounded range with the exact version pinned by
 the committed `.terraform.lock.hcl`. Environments/modules split (see
 `terraform/README.md`): modules are environment-agnostic building blocks;
 adding staging/prod is a new composition root, not copied resources.
+
+---
+
+## ADR-007: Amazon ECR over Docker Hub for the container registry
+
+**Date:** 2026-07-08 · **Status:** Accepted
+
+**Context.** The original project brief said "push image to docker-hub";
+the infrastructure plan (Issue #8) provisions ECR. The discrepancy needed a
+decision.
+
+**Options.**
+1. **Docker Hub** — requires a stored username/token secret in GitHub and in
+   the cluster (imagePullSecrets); free tier has pull rate limits that
+   throttle node image pulls; traffic traverses the public internet.
+2. **Amazon ECR** — IAM-native: CI pushes via its OIDC-assumed role, nodes
+   pull via their instance role, zero registry credentials exist anywhere;
+   no rate limits; reachable through the VPC interface endpoints already
+   provisioned (pulls never leave the AWS backbone); scan-on-push adds a
+   second scanning layer behind Trivy.
+
+**Decision.** ECR. Every property we care about — no stored credentials,
+private network path, registry-side scanning — is native. Immutable tags
+are enabled so a values.yaml tag always references the same image bytes,
+which is what makes GitOps rollback trustworthy. A lifecycle policy bounds
+storage (untagged expire at 7 days, last 20 tagged retained).
+
+**Consequences.** The brief's "docker-hub" step becomes "push to ECR" in
+the pipeline (Issue #14). Image URLs are account-scoped
+(<account>.dkr.ecr.<region>.amazonaws.com/...), injected into Helm values
+by CI rather than hardcoded.
