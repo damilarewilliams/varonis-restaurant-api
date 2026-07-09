@@ -45,6 +45,10 @@ module "eks" {
   # TODO: narrow to known CIDRs; private-only is the hardened posture.
   endpoint_public_access       = true
   endpoint_public_access_cidrs = ["0.0.0.0/0"]
+
+  # Control-plane log group is created inside the eks module (before the
+  # cluster) so audit logs are CMK-encrypted from the first byte.
+  log_group_kms_key_arn = module.kms_logs.key_arn
 }
 
 # ---------------------------------------------------------------------------
@@ -98,19 +102,21 @@ module "iam" {
 # Issue #11 — Provision Logging Infrastructure (own CMK: separate blast
 # radius from the data key; needs the CloudWatch Logs service grant)
 # ---------------------------------------------------------------------------
-# module "kms_logs" {
-#   source = "../../modules/kms"
-#
-#   project               = var.project
-#   environment           = var.environment
-#   purpose               = "logs"
-#   allow_cloudwatch_logs = true
-# }
-#
-# module "logging" {
-#   source = "../../modules/logging"
-#
-#   project     = var.project
-#   environment = var.environment
-#   kms_key_arn = module.kms_logs.key_arn
-# }
+module "kms_logs" {
+  source = "../../modules/kms"
+
+  project               = var.project
+  environment           = var.environment
+  purpose               = "logs"
+  allow_cloudwatch_logs = true
+}
+
+module "logging" {
+  source = "../../modules/logging"
+
+  project           = var.project
+  environment       = var.environment
+  kms_key_arn       = module.kms_logs.key_arn
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+}
