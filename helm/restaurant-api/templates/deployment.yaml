@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "restaurant-api.fullname" . }}
+  labels:
+    {{- include "restaurant-api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "restaurant-api.selectorLabels" . | nindent 6 }}
+  # Zero-downtime rolling updates: bring one new pod up before taking
+  # any old pod down; readiness gates the traffic switch.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        {{- include "restaurant-api.selectorLabels" . | nindent 8 }}
+      annotations:
+        # Config change => new pod template hash => automatic rollout.
+        # Without this, ConfigMap edits silently wait for the next deploy.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "restaurant-api.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "restaurant-api.fullname" . }}-config
+            {{- if .Values.secret.create }}
+            - secretRef:
+                name: {{ include "restaurant-api.fullname" . }}-secret
+            {{- end }}
+          {{- with .Values.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          # Liveness: process is up — restarts the container on failure.
+          # Checks nothing external (a DynamoDB outage must not restart pods).
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          # Readiness: dependencies reachable — pulls the pod out of
+          # Service endpoints on failure, without restarting it.
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          # Requests drive scheduling and HPA math; limits cap blast radius.
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

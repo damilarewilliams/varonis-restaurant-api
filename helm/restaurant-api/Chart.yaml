@@ -1,0 +1,9 @@
+apiVersion: v2
+name: restaurant-api
+description: Restaurant recommendation API (FastAPI on EKS, deployed via ArgoCD)
+type: application
+# Chart version: bumped when the chart's templates change.
+version: 0.1.0
+# App version: informational; the deployed image tag is values.image.tag,
+# which CI updates on every delivery.
+appVersion: "0.1.0"
