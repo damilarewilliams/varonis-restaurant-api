@@ -82,14 +82,17 @@ module "dynamodb" {
 # ---------------------------------------------------------------------------
 # Issue #10 — Provision IAM Roles and Policies
 # ---------------------------------------------------------------------------
-# module "iam" {
-#   source = "../../modules/iam"
-#
-#   project             = var.project
-#   environment         = var.environment
-#   oidc_provider_arn   = module.eks.oidc_provider_arn
-#   dynamodb_table_arns = [module.dynamodb.table_arn]
-# }
+module "iam" {
+  source = "../../modules/iam"
+
+  project             = var.project
+  environment         = var.environment
+  cluster_name        = module.eks.cluster_name
+  oidc_provider_arn   = module.eks.oidc_provider_arn
+  oidc_provider_url   = module.eks.oidc_provider_url
+  dynamodb_table_arns = [module.dynamodb.table_arn]
+  github_repository   = "damilarewilliams/varonis-restaurant-api"
+}
 
 # ---------------------------------------------------------------------------
 # Issue #11 — Provision Logging Infrastructure (own CMK: separate blast

@@ -213,3 +213,37 @@ storage (untagged expire at 7 days, last 20 tagged retained).
 the pipeline (Issue #14). Image URLs are account-scoped
 (<account>.dkr.ecr.<region>.amazonaws.com/...), injected into Helm values
 by CI rather than hardcoded.
+
+---
+
+## ADR-008: GitHub OIDC federation with per-job CI roles; no static AWS keys
+
+**Date:** 2026-07-08 · **Status:** Accepted
+
+**Context.** CI needs AWS access for two very different jobs: pushing
+images (narrow) and running Terraform (broad). The traditional approach —
+an IAM user's access key stored in GitHub Secrets — is a long-lived
+credential that leaks, never rotates itself, and grants whoever holds it
+everything CI can do.
+
+**Options.**
+1. **IAM user access keys in GitHub Secrets** — long-lived, manually
+   rotated, one blast radius for all pipeline jobs.
+2. **GitHub OIDC federation** — GitHub Actions presents a short-lived
+   signed job token; AWS validates it against trust conditions and issues
+   temporary credentials. Nothing stored, nothing to rotate, and the trust
+   policy can distinguish *which* workflow/branch/environment is asking.
+
+**Decision.** OIDC federation with two separately-scoped roles:
+`gha-delivery` (ECR push only, assumable only from `refs/heads/main`) and
+`gha-terraform` (infra provisioning, assumable only from jobs in the
+protected `dev-infra` GitHub Environment — the same human-approval gate as
+the apply step). The terraform role is PowerUserAccess plus IAM re-granted
+strictly on `<project>-<env>-*` roles, so CI manages this stack's
+identities and nothing else in the account.
+
+**Consequences.** GitHub stores role *ARNs* (not secrets) as Actions
+variables. A compromised PR or fork workflow can assume neither role (sub
+conditions fail). The IAM-by-prefix bound means any future role this stack
+creates must follow the `<project>-<env>-` naming convention — enforced by
+the modules' `name_prefix` locals.

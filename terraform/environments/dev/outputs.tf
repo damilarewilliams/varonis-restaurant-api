@@ -50,3 +50,23 @@ output "dynamodb_table_arn" {
   description = "Restaurants table ARN (IRSA policy scope, Issue #10)"
   value       = module.dynamodb.table_arn
 }
+
+output "api_irsa_role_arn" {
+  description = "IRSA role for the API ServiceAccount annotation (Helm values)"
+  value       = module.iam.api_role_arn
+}
+
+output "runner_irsa_role_arn" {
+  description = "IRSA role for the ARC runner ServiceAccount annotation"
+  value       = module.iam.runner_role_arn
+}
+
+output "gha_delivery_role_arn" {
+  description = "CI role for image push (set as GitHub Actions variable)"
+  value       = module.iam.gha_delivery_role_arn
+}
+
+output "gha_terraform_role_arn" {
+  description = "CI role for terraform plan/apply (set as GitHub Actions variable)"
+  value       = module.iam.gha_terraform_role_arn
+}
