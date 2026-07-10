@@ -9,12 +9,12 @@ pieces work and how to configure them (Issue #15, ADR-009).
 
 ```
 merge to main (terraform/** changed)
-  └─ terraform-plan job          [environment: dev-infra-plan — unprotected]
+  └─ terraform-plan job          [environment: dev-infra-plan - unprotected]
        ├─ fmt-check · init · validate
        ├─ terraform plan -out=tfplan
        ├─ plan summary rendered on the workflow run page
        └─ tfplan uploaded as a workflow artifact
-  └─ terraform-apply job         [environment: dev-infra — PROTECTED]
+  └─ terraform-apply job         [environment: dev-infra - PROTECTED]
        ⏸  GitHub pauses the job: "Review pending deployments"
        │   reviewer reads the plan summary → Approve / Reject
        ├─ downloads the tfplan ARTIFACT
@@ -29,13 +29,13 @@ opt into with `environment: <name>`. Environments carry two things:
 
 1. **Protection rules.** The one we use is **required reviewers**: when a
    job targeting the environment starts, GitHub suspends it and notifies
-   the reviewers. The job's steps do not run — and its OIDC token is not
-   issued — until someone with reviewer rights clicks *Approve* on the
+   the reviewers. The job's steps do not run - and its OIDC token is not
+   issued - until someone with reviewer rights clicks *Approve* on the
    run page. Rejection cancels the job. The approval (who, when) is
    recorded on the run: an audit trail for every apply.
 
 2. **Scoped secrets/variables.** Values attached to an environment are
-   only visible to jobs running in it — another isolation layer we get
+   only visible to jobs running in it - another isolation layer we get
    for free.
 
 ## Why the approval is trustworthy (three properties)
@@ -43,7 +43,7 @@ opt into with `environment: <name>`. Environments carry two things:
 **1. The reviewed plan is the applied plan.** The plan job uploads
 `tfplan` as an artifact; the apply job downloads and runs
 `terraform apply tfplan`. Terraform refuses to apply a plan if the state
-has changed underneath it — so what the reviewer read is bit-for-bit what
+has changed underneath it - so what the reviewer read is bit-for-bit what
 executes, or nothing executes.
 
 **2. Approval gates the credentials, not just the job.** The
@@ -64,7 +64,7 @@ one role, protection asymmetry by design.
 REPO=damilarewilliams/varonis-restaurant-api
 cd "$(git rev-parse --show-toplevel)"
 
-# Actions variables — role ARNs require a completed terraform apply;
+# Actions variables - role ARNs require a completed terraform apply;
 # re-run those two lines after the first apply if needed.
 gh variable set AWS_REGION -R "$REPO" -b "us-east-1"
 gh variable set ECR_REPOSITORY -R "$REPO" -b "varonis-restaurant-api-dev"
@@ -92,17 +92,17 @@ add "GitHub Actions" (the values-bump bot commit, see below).
 ## Branch protection and the GitOps bot (ADR-009)
 
 `main` is protected: PRs required, CI status checks required. That raises
-a conflict — the pipeline itself pushes the `values.yaml` bump commit
+a conflict - the pipeline itself pushes the `values.yaml` bump commit
 directly to `main`. Resolution: a **ruleset bypass for the GitHub Actions
 bot** (Settings → Rules → the main ruleset → Bypass list → add
 `github-actions[bot]`). The bypass is narrow (that identity only), fully
 audited (bot commits are visibly attributed), and the bot only ever writes
-one file via the reviewed workflow. The alternative — the bot opening
-auto-merged PRs — adds latency and PR noise for zero additional control,
+one file via the reviewed workflow. The alternative - the bot opening
+auto-merged PRs - adds latency and PR noise for zero additional control,
 since the workflow content that drives the bot is itself PR-reviewed.
 
 ## Rejecting a plan
 
 Click *Reject* on the pending deployment. The apply job cancels; nothing
 was applied; the tfplan artifact expires (5 days). Fix forward with a new
-PR — the next merge produces a fresh plan.
+PR - the next merge produces a fresh plan.

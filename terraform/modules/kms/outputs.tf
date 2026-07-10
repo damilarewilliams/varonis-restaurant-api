@@ -1,5 +1,5 @@
 output "key_arn" {
-  description = "ARN of the CMK — referenced by encrypted resources"
+  description = "ARN of the CMK - referenced by encrypted resources"
   value       = aws_kms_key.this.arn
 }
 

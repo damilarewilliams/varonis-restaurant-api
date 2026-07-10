@@ -9,7 +9,7 @@ variable "environment" {
 }
 
 variable "purpose" {
-  description = "What this key encrypts (e.g. data, logs) — used in the alias; one key per purpose"
+  description = "What this key encrypts (e.g. data, logs) - used in the alias; one key per purpose"
   type        = string
 }
 

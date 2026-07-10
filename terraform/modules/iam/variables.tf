@@ -31,7 +31,7 @@ variable "dynamodb_table_arns" {
 }
 
 variable "dynamodb_kms_key_arn" {
-  description = "CMK encrypting the DynamoDB table — the API role needs kms:Decrypt on it to read the table"
+  description = "CMK encrypting the DynamoDB table - the API role needs kms:Decrypt on it to read the table"
   type        = string
 }
 

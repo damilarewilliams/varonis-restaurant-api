@@ -22,7 +22,7 @@ api_router = APIRouter(prefix="/api/v1", tags=["recommendations"])
 @health_router.get("/health/live")
 def liveness() -> dict[str, str]:
     """Liveness: the process is up and serving. Kubernetes restarts the
-    container if this fails. Deliberately checks nothing external — a
+    container if this fails. Deliberately checks nothing external - a
     DynamoDB outage must not cause a restart storm."""
     return {"status": "ok"}
 

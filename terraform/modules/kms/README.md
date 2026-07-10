@@ -2,7 +2,7 @@
 
 One customer-managed KMS key (CMK) per purpose, with annual rotation and a
 safe deletion window. Instantiated per concern (`data`, `logs`) so each has
-its own access policy and blast radius — a compromise of the logs key never
+its own access policy and blast radius - a compromise of the logs key never
 exposes the data key.
 
 ## Design decisions
@@ -10,7 +10,7 @@ exposes the data key.
 - **CMK over AWS-managed keys** where the data is sensitive (DynamoDB
   restaurant data, CloudWatch logs): auditable usage in CloudTrail,
   revocable grants, policy control. Non-sensitive material (ECR images)
-  stays on free AWS-managed encryption — see the ecr module README.
+  stays on free AWS-managed encryption - see the ecr module README.
 - **Root-admin statement** is mandatory boilerplate: a CMK whose policy
   locks out the account is unrecoverable by design.
 - **`allow_cloudwatch_logs` flag** adds the service-principal grant that
@@ -22,8 +22,8 @@ exposes the data key.
 
 | Name | Description | Default |
 |------|-------------|---------|
-| project / environment | Naming and tags | — |
-| purpose | What the key encrypts; forms the alias | — |
+| project / environment | Naming and tags | - |
+| purpose | What the key encrypts; forms the alias | - |
 | allow_cloudwatch_logs | Grant logs service use of key | `false` |
 | deletion_window_in_days | Deletion recovery window | `7` |
 

@@ -2,11 +2,11 @@
 # VPC spanning var.az_count AZs with a public/private subnet pair per AZ,
 # Internet Gateway, NAT (shared or per-AZ), and VPC endpoints.
 #
-# Subnet math (default /16 VPC, /20 subnets — 4,091 usable IPs each):
+# Subnet math (default /16 VPC, /20 subnets - 4,091 usable IPs each):
 #   public[i]  = cidrsubnet(vpc_cidr, 4, i)              → 10.0.0.0/20, 10.0.16.0/20, 10.0.32.0/20
 #   private[i] = cidrsubnet(vpc_cidr, 4, i + az_count+1) → 10.0.64.0/20, 10.0.80.0/20, 10.0.96.0/20
 # Private subnets are deliberately large: EKS with the VPC CNI assigns a
-# VPC IP to every pod, so pod density — not node count — sizes the subnet.
+# VPC IP to every pod, so pod density - not node count - sizes the subnet.
 
 data "aws_availability_zones" "available" {
   state = "available"
@@ -157,7 +157,7 @@ resource "aws_route_table_association" "private" {
 }
 
 # ---------------------------------------------------------------------------
-# VPC endpoints — traffic to AWS services stays off the public internet
+# VPC endpoints - traffic to AWS services stays off the public internet
 # ---------------------------------------------------------------------------
 # Gateway endpoints are free: always create them.
 resource "aws_vpc_endpoint" "s3" {
@@ -182,7 +182,7 @@ resource "aws_vpc_endpoint" "dynamodb" {
   }
 }
 
-# Interface endpoints bill hourly per AZ — gated by a flag for dev thrift.
+# Interface endpoints bill hourly per AZ - gated by a flag for dev thrift.
 resource "aws_security_group" "vpc_endpoints" {
   count = var.enable_interface_endpoints ? 1 : 0
 

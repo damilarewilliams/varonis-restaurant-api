@@ -26,13 +26,13 @@ Full diagram and rationale: [docs/architecture.md](docs/architecture.md).
 ## Deployment status
 
 Deployed and verified end-to-end on AWS (account-scoped resources, region
-us-east-1): every pipeline stage has run green against the live cluster —
+us-east-1): every pipeline stage has run green against the live cluster -
 Terraform plan → human approval → apply, image build → Trivy gate → ECR
 push → GitOps values bump → ArgoCD sync → in-cluster verification. The API
 serves the assignment contract from a KMS-encrypted DynamoDB table via
 IRSA (no stored credentials anywhere in the chain).
 
-Try it — the Service is exposed via a public ELB for the review window
+Try it - the Service is exposed via a public ELB for the review window
 (see the submission email for the current hostname, or resolve it with
 cluster access):
 
@@ -51,7 +51,7 @@ kubectl get svc -n restaurant-api varonis-restaurant-api-dev \
 |---|---|
 | ![ArgoCD application](docs/images/argocd-application.png) | ArgoCD: `varonis-restaurant-api-dev` Healthy/Synced, auto-sync from `main` |
 | ![ArgoCD resource tree](docs/images/argocd-resource-tree.png) | Resource tree: Deployment, Service, ConfigMap, HPA, NetworkPolicy, 2 pods Running |
-| ![Local test evidence](docs/images/local-test-evidence.png) | Local quickstart: test suite green, contract responses from the in-memory backend — no AWS required |
+| ![Local test evidence](docs/images/local-test-evidence.png) | Local quickstart: test suite green, contract responses from the in-memory backend - no AWS required |
 
 Known gaps, accepted deliberately for the exercise and documented in
 [docs/security.md](docs/security.md): no ALB/Ingress controller (access is
@@ -61,8 +61,8 @@ UTC whole-hours (per-restaurant timezones would need a tz field).
 
 **Scope note:** the assignment asks for a recommendation API, IaC, secure
 logging, and production-grade practice. This repo deliberately goes
-further — EKS/GitOps/ArgoCD, self-hosted CD runners, plan-approval gates,
-OIDC-federated CI with zero static AWS keys — to demonstrate platform
+further - EKS/GitOps/ArgoCD, self-hosted CD runners, plan-approval gates,
+OIDC-federated CI with zero static AWS keys - to demonstrate platform
 thinking, not because the brief demands it. The decision log records what
 each layer buys and what a smaller build would have looked like.
 
@@ -110,5 +110,5 @@ Helm chart carry their own README.
 ## Development workflow
 
 All work happens on feature branches merged into a protected `main` via Pull
-Request — one GitHub Issue per branch per PR. See
+Request - one GitHub Issue per branch per PR. See
 [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -54,7 +54,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         """One structured log line per request. Query params are masked
-        (defense in depth — no sensitive keys are expected in this API,
+        (defense in depth - no sensitive keys are expected in this API,
         but the masker guarantees it), auth headers are never logged."""
         request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
         start = time.perf_counter()

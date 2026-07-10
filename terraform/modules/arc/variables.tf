@@ -25,7 +25,7 @@ variable "runner_role_arn" {
 }
 
 variable "runner_scale_set_name" {
-  description = "Scale set name — this is the `runs-on` label CD jobs target"
+  description = "Scale set name - this is the `runs-on` label CD jobs target"
   type        = string
   default     = "arc-cd"
 }

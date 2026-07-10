@@ -2,7 +2,7 @@
 
 Packages the API for GitOps deployment: ArgoCD watches this directory on
 `main` and reconciles the cluster to it (ADR-004). CI updates
-`values.yaml` `image.tag` on every delivery — that commit IS the deploy.
+`values.yaml` `image.tag` on every delivery - that commit IS the deploy.
 
 ## Objects rendered
 
@@ -17,13 +17,13 @@ belongs to the platform, not to the app chart.
 
 ## Key decisions
 
-- **Zero-downtime rollout**: `maxSurge: 1, maxUnavailable: 0` — a new pod
+- **Zero-downtime rollout**: `maxSurge: 1, maxUnavailable: 0` - a new pod
   must pass readiness before any old pod is removed.
 - **Config checksum annotation**: ConfigMap changes roll the pods
   automatically; without it, config edits silently apply on the *next*
   unrelated deploy.
 - **Liveness ≠ readiness**: liveness (`/health/live`) checks only the
-  process — dependency outages must not cause restart storms; readiness
+  process - dependency outages must not cause restart storms; readiness
   (`/health/ready`) gates traffic on dependency health.
 - **Security context matches the image**: runAsNonRoot UID 10001,
   read-only root filesystem, no privilege escalation, all capabilities

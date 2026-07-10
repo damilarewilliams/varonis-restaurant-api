@@ -28,7 +28,7 @@ variable "endpoint_public_access" {
   description = <<-EOT
     Expose the cluster API endpoint publicly. Dev default true so
     GitHub-hosted runners can run Terraform/kubectl without VPN
-    infrastructure — restricted by endpoint_public_access_cidrs.
+    infrastructure - restricted by endpoint_public_access_cidrs.
     Hardened posture: false (private endpoint only).
   EOT
   type        = bool

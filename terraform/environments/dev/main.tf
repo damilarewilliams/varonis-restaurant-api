@@ -1,11 +1,11 @@
-# dev environment — module composition root.
+# dev environment - module composition root.
 #
 # Each module call below is enabled by the issue that implements the
 # module. Keeping the wiring visible-but-commented documents the target
 # architecture while letting `terraform validate` pass at every commit.
 
 # ---------------------------------------------------------------------------
-# Issue #6 — Provision AWS Networking
+# Issue #6 - Provision AWS Networking
 # ---------------------------------------------------------------------------
 module "networking" {
   source = "../../modules/networking"
@@ -25,7 +25,7 @@ module "networking" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #7 — Provision Amazon EKS
+# Issue #7 - Provision Amazon EKS
 # ---------------------------------------------------------------------------
 module "eks" {
   source = "../../modules/eks"
@@ -52,7 +52,7 @@ module "eks" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #8 — Provision Amazon ECR
+# Issue #8 - Provision Amazon ECR
 # ---------------------------------------------------------------------------
 module "ecr" {
   source = "../../modules/ecr"
@@ -62,7 +62,7 @@ module "ecr" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #9 — Provision DynamoDB (+ the data CMK it encrypts with)
+# Issue #9 - Provision DynamoDB (+ the data CMK it encrypts with)
 # ---------------------------------------------------------------------------
 module "kms_data" {
   source = "../../modules/kms"
@@ -84,7 +84,7 @@ module "dynamodb" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #10 — Provision IAM Roles and Policies
+# Issue #10 - Provision IAM Roles and Policies
 # ---------------------------------------------------------------------------
 module "iam" {
   source = "../../modules/iam"
@@ -102,7 +102,7 @@ module "iam" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #11 — Provision Logging Infrastructure (own CMK: separate blast
+# Issue #11 - Provision Logging Infrastructure (own CMK: separate blast
 # radius from the data key; needs the CloudWatch Logs service grant)
 # ---------------------------------------------------------------------------
 module "kms_logs" {
@@ -125,7 +125,7 @@ module "logging" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #13 — Configure ArgoCD GitOps Deployment (ADR-004)
+# Issue #13 - Configure ArgoCD GitOps Deployment (ADR-004)
 # ---------------------------------------------------------------------------
 module "argocd" {
   source = "../../modules/argocd"
@@ -140,7 +140,7 @@ module "argocd" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #14 — ARC self-hosted runners for CD jobs (ADR-005)
+# Issue #14 - ARC self-hosted runners for CD jobs (ADR-005)
 # ---------------------------------------------------------------------------
 module "arc" {
   count = var.arc_github_token != "" ? 1 : 0
@@ -157,7 +157,7 @@ module "arc" {
 }
 
 # ---------------------------------------------------------------------------
-# Issue #17 — Fluent Bit log shipper (completes the logging pipeline)
+# Issue #17 - Fluent Bit log shipper (completes the logging pipeline)
 # ---------------------------------------------------------------------------
 module "fluentbit" {
   source = "../../modules/fluentbit"

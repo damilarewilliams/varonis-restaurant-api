@@ -17,7 +17,7 @@ terraform {
 
 # Namespace + SA are ours, not chart-created: the IRSA annotation must
 # match the logging module's trust policy exactly
-# (system:serviceaccount:logging:fluent-bit) — same pattern as ARC.
+# (system:serviceaccount:logging:fluent-bit) - same pattern as ARC.
 resource "kubernetes_namespace" "this" {
   metadata {
     name = var.namespace
@@ -51,7 +51,7 @@ resource "helm_release" "fluent_bit" {
         name   = kubernetes_service_account.this.metadata[0].name
       }
 
-      # Only the app namespace's container logs — platform namespaces
+      # Only the app namespace's container logs - platform namespaces
       # (argocd, arc, kube-system) are noise for this log group and
       # would exceed the shipper role's write-only single-group scope.
       input = {
@@ -62,7 +62,7 @@ resource "helm_release" "fluent_bit" {
         enabled = true
         region  = var.aws_region
         # The group already exists (Terraform-managed, encrypted,
-        # bounded retention); the role cannot create groups — so
+        # bounded retention); the role cannot create groups - so
         # auto-creation stays off and misconfig fails loudly.
         logGroupName    = var.log_group_name
         autoCreateGroup = false

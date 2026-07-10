@@ -51,7 +51,7 @@ spec:
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          # Liveness: process is up — restarts the container on failure.
+          # Liveness: process is up - restarts the container on failure.
           # Checks nothing external (a DynamoDB outage must not restart pods).
           livenessProbe:
             httpGet:
@@ -60,7 +60,7 @@ spec:
             initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
             failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
-          # Readiness: dependencies reachable — pulls the pod out of
+          # Readiness: dependencies reachable - pulls the pod out of
           # Service endpoints on failure, without restarting it.
           readinessProbe:
             httpGet:

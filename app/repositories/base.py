@@ -1,5 +1,5 @@
 """Repository port. Business logic depends on this Protocol,
-never on boto3 — which is what makes the service unit-testable
+never on boto3 - which is what makes the service unit-testable
 without AWS and lets local dev run with zero credentials."""
 
 from typing import Protocol

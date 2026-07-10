@@ -19,7 +19,7 @@ locals {
 }
 
 # ---------------------------------------------------------------------------
-# IAM: cluster role — what the EKS control plane itself may do
+# IAM: cluster role - what the EKS control plane itself may do
 # ---------------------------------------------------------------------------
 data "aws_iam_policy_document" "cluster_assume" {
   statement {
@@ -43,9 +43,9 @@ resource "aws_iam_role_policy_attachment" "cluster" {
 }
 
 # ---------------------------------------------------------------------------
-# IAM: node role — the minimum AWS-managed set for worker nodes.
+# IAM: node role - the minimum AWS-managed set for worker nodes.
 # Note: NO application permissions here. Pods get AWS access via IRSA
-# (Issue #10), never via the node instance role — otherwise every pod
+# (Issue #10), never via the node instance role - otherwise every pod
 # on the node would inherit those permissions.
 # ---------------------------------------------------------------------------
 data "aws_iam_policy_document" "node_assume" {
@@ -76,7 +76,7 @@ resource "aws_iam_role_policy_attachment" "node" {
 }
 
 # ---------------------------------------------------------------------------
-# Control-plane log group — created BEFORE the cluster. If EKS creates it
+# Control-plane log group - created BEFORE the cluster. If EKS creates it
 # implicitly on first api/audit log, it gets no encryption and no
 # retention; pre-creating it means the audit trail is CMK-encrypted and
 # bounded from the first byte.
@@ -114,7 +114,7 @@ resource "aws_eks_cluster" "this" {
     bootstrap_cluster_creator_admin_permissions = true
   }
 
-  # API-server audit trail to CloudWatch — part of the logging story.
+  # API-server audit trail to CloudWatch - part of the logging story.
   enabled_cluster_log_types = var.cluster_log_types
 
   # IAM must settle before/after the cluster (destroys wedge otherwise);
@@ -126,7 +126,7 @@ resource "aws_eks_cluster" "this" {
 }
 
 # ---------------------------------------------------------------------------
-# OIDC provider — the foundation of IRSA. Kubernetes service accounts get
+# OIDC provider - the foundation of IRSA. Kubernetes service accounts get
 # JWT tokens from this issuer; IAM roles trust the issuer; pods exchange
 # the token for role credentials via STS. No static keys anywhere.
 # ---------------------------------------------------------------------------
@@ -141,7 +141,7 @@ resource "aws_iam_openid_connect_provider" "this" {
 }
 
 # ---------------------------------------------------------------------------
-# Managed node group — private subnets only
+# Managed node group - private subnets only
 # ---------------------------------------------------------------------------
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
@@ -174,9 +174,9 @@ resource "aws_eks_node_group" "this" {
 }
 
 # ---------------------------------------------------------------------------
-# Core add-ons — managed by EKS, versions resolved to the cluster default.
+# Core add-ons - managed by EKS, versions resolved to the cluster default.
 # EBS CSI is intentionally omitted: no workload uses persistent volumes;
-# adding it means adding its IRSA role — do that when a need exists.
+# adding it means adding its IRSA role - do that when a need exists.
 # ---------------------------------------------------------------------------
 resource "aws_eks_addon" "core" {
   for_each = toset(["coredns", "kube-proxy"])
@@ -193,7 +193,7 @@ resource "aws_eks_addon" "core" {
 
 # vpc-cni gets its own resource: NetworkPolicy objects are inert unless
 # the CNI enforces them (aws-network-policy-agent). Without this flag the
-# chart's default-deny policy would silently do nothing — the worst kind
+# chart's default-deny policy would silently do nothing - the worst kind
 # of security control.
 resource "aws_eks_addon" "vpc_cni" {
   cluster_name = aws_eks_cluster.this.name

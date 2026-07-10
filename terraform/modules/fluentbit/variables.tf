@@ -24,13 +24,13 @@ variable "shipper_role_arn" {
 }
 
 variable "namespace" {
-  description = "Namespace for the DaemonSet — must match the IRSA trust policy"
+  description = "Namespace for the DaemonSet - must match the IRSA trust policy"
   type        = string
   default     = "logging"
 }
 
 variable "service_account" {
-  description = "Service account name — must match the IRSA trust policy"
+  description = "Service account name - must match the IRSA trust policy"
   type        = string
   default     = "fluent-bit"
 }

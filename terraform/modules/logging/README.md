@@ -2,7 +2,7 @@
 
 The encrypted, access-controlled destination for the system's logs.
 Masking of sensitive fields already happened inside the application
-(app/core/logging.py) — this module guarantees what happens after.
+(app/core/logging.py) - this module guarantees what happens after.
 
 ## Design decisions
 
@@ -23,10 +23,10 @@ Masking of sensitive fields already happened inside the application
 
 | Name | Description | Default |
 |------|-------------|---------|
-| project / environment | Naming and tags | — |
-| kms_key_arn | Logs CMK | — |
+| project / environment | Naming and tags | - |
+| kms_key_arn | Logs CMK | - |
 | retention_in_days | Log retention | `30` |
-| oidc_provider_arn / url | Cluster OIDC (shipper IRSA) | — |
+| oidc_provider_arn / url | Cluster OIDC (shipper IRSA) | - |
 | shipper_namespace / service_account | Fluent Bit identity | `logging` / `fluent-bit` |
 
 ## Outputs

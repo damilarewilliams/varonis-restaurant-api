@@ -1,4 +1,4 @@
-"""Recommendation business logic — pure functions, trivially unit-testable."""
+"""Recommendation business logic - pure functions, trivially unit-testable."""
 
 from datetime import datetime, timezone
 

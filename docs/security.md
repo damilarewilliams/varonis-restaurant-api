@@ -10,7 +10,7 @@ The assets: the restaurant data (DynamoDB), the AWS account itself, the
 deployment pipeline (which can change what runs), and the logs (treated
 as sensitive). The interesting attackers: someone hijacking the public
 repo's CI, someone compromising a pod, and someone abusing leaked
-credentials — which is why the design's central property is that **no
+credentials - which is why the design's central property is that **no
 long-lived credential exists anywhere in the system**.
 
 ## Control matrix
@@ -18,7 +18,7 @@ long-lived credential exists anywhere in the system**.
 | Layer | Control | Why | Where |
 |-------|---------|-----|-------|
 | **Source** | Protected `main`: PRs + required CI checks + CODEOWNERS | No unreviewed change reaches the branch that drives infra and deploys | GitHub ruleset, `.github/CODEOWNERS` |
-| | `.gitignore` blocks state/tfvars/keys; no credentials in code (`git grep` provably clean) | Secrets never enter history — history is forever | Issue #1 |
+| | `.gitignore` blocks state/tfvars/keys; no credentials in code (`git grep` provably clean) | Secrets never enter history - history is forever | Issue #1 |
 | | GitOps bot is the only ruleset bypass, single identity, audited | Pipeline must write values.yaml; scope is one bot, one file, reviewed workflow code | ADR-009 |
 | **CI identity** | GitHub OIDC federation; zero AWS keys in GitHub | Short-lived tokens, nothing to leak or rotate | ADR-008, iam module |
 | | Two CI roles: delivery (ECR push, `main` ref only) and terraform (protected-environment claim only) | A fork/PR workflow can assume neither; blast radii separated | iam module trust conditions |
@@ -43,17 +43,22 @@ long-lived credential exists anywhere in the system**.
 
 ## Accepted trade-offs (known, documented, reversible)
 
-1. **EKS public endpoint with `0.0.0.0/0`** in dev — flagged with a TODO;
+1. **EKS public endpoint with `0.0.0.0/0`** in dev - flagged with a TODO;
    narrowing the CIDR or flipping `endpoint_public_access=false` is a
    variable change, not a redesign.
-2. **Sole-maintainer approval** — on a personal repo the author approves
+2. **Sole-maintainer approval** - on a personal repo the author approves
    their own applies; an organization would exclude the author.
-3. **ArgoCD `server.insecure` behind ClusterIP** — TLS terminates at the
+3. **ArgoCD `server.insecure` behind ClusterIP** - TLS terminates at the
    port-forward; acceptable only because the server is never exposed.
-4. **ARC registration PAT** — one real secret exists (GitHub secret /
+4. **ARC registration PAT** - one real secret exists (GitHub secret /
    TF_VAR); a GitHub App is the lower-privilege upgrade.
-5. **Bot ruleset bypass** — mitigated by CODEOWNERS review of all
+5. **Bot ruleset bypass** - mitigated by CODEOWNERS review of all
    workflow changes (the code that drives the bot is itself gated).
+6. **Public demo ELB (review window only)** - the Service runs as type
+   LoadBalancer over plain HTTP so reviewers can reach the API without
+   cluster access. Reverted to ClusterIP after review; the production
+   path is the chart's Ingress once the AWS Load Balancer Controller is
+   installed.
 
 ## Verifying the claims
 

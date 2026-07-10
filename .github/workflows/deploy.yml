@@ -1,11 +1,11 @@
-# Deploy — runs on every merge to main.
+# Deploy - runs on every merge to main.
 #
 #   infra changed:  plan -> [human approval: dev-infra environment] -> apply -> verify
 #   app changed:    build -> Trivy gate -> push to ECR -> bump values.yaml -> ArgoCD deploys
 #   always after a delivery: CD verification on the in-cluster ARC runner
 #
 # AWS auth is OIDC-only (ADR-008): role ARNs live in Actions *variables*
-# (not secrets — they are not secret), no AWS keys exist in GitHub.
+# (not secrets - they are not secret), no AWS keys exist in GitHub.
 #
 # Required repo configuration (one-time, documented in Issue #15):
 #   Variables: AWS_REGION, AWS_TERRAFORM_ROLE_ARN, AWS_DELIVERY_ROLE_ARN, ECR_REPOSITORY
@@ -119,7 +119,7 @@ jobs:
           terraform show -no-color tfplan | tail -60 >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-      # The apply job applies THIS artifact — the exact plan a human
+      # The apply job applies THIS artifact - the exact plan a human
       # reviews, not a fresh plan that could differ.
       - uses: actions/upload-artifact@v4
         with:
@@ -177,7 +177,7 @@ jobs:
   # -------------------------------------------------------------------------
   build-deliver:
     needs: [changes, terraform-apply]
-    # Run when app changed, whether or not the terraform leg ran —
+    # Run when app changed, whether or not the terraform leg ran -
     # but never after a failed apply (don't deploy onto broken infra).
     if: >
       always() &&
@@ -235,9 +235,9 @@ jobs:
           git push origin main
 
   # -------------------------------------------------------------------------
-  # CD verification — runs INSIDE the cluster on an ephemeral ARC runner
+  # CD verification - runs INSIDE the cluster on an ephemeral ARC runner
   # (ADR-005): rollout wait, health/readiness, smoke tests against the
-  # Service DNS. Read-only cluster access (view, namespaced — Issue #10).
+  # Service DNS. Read-only cluster access (view, namespaced - Issue #10).
   # -------------------------------------------------------------------------
   cd-verify:
     needs: build-deliver
@@ -254,7 +254,7 @@ jobs:
           echo "$HOME/bin" >> "$GITHUB_PATH"
           echo "$HOME" >> "$GITHUB_PATH"
 
-      - name: Kubeconfig (IRSA — no stored credentials)
+      - name: Kubeconfig (IRSA - no stored credentials)
         run: aws eks update-kubeconfig --name "$APP_NAME" --region "${{ vars.AWS_REGION }}"
 
       - name: Wait for ArgoCD to converge the new tag

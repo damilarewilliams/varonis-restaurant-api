@@ -1,5 +1,5 @@
 output "app_log_group_name" {
-  description = "Application log group — Fluent Bit output destination"
+  description = "Application log group - Fluent Bit output destination"
   value       = aws_cloudwatch_log_group.app.name
 }
 

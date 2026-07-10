@@ -9,12 +9,12 @@ resource "aws_ecr_repository" "this" {
   name = local.repository_name
 
   # Immutable tags: a pushed tag can never be overwritten. This is what
-  # makes GitOps rollback trustworthy — the tag in values.yaml always
+  # makes GitOps rollback trustworthy - the tag in values.yaml always
   # points at the same bytes. Overwritable tags would let "rollback"
   # silently deploy different content.
   image_tag_mutability = "IMMUTABLE"
 
-  # Registry-side scanning on every push — second scan layer after the
+  # Registry-side scanning on every push - second scan layer after the
   # pipeline's Trivy gate (defense in depth: Trivy blocks the pipeline,
   # ECR keeps re-evaluating stored images as new CVEs are published).
   image_scanning_configuration {
@@ -23,7 +23,7 @@ resource "aws_ecr_repository" "this" {
 
   # AES256 = AWS-managed encryption at rest, always on, no key to manage.
   # A customer-managed KMS key adds per-request KMS cost and rotation
-  # ops for images that are not secret material — the CMKs (Issue #9)
+  # ops for images that are not secret material - the CMKs (Issue #9)
   # are reserved for data and logs, which ARE sensitive.
   encryption_configuration {
     encryption_type = "AES256"
