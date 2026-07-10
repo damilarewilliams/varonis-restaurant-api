@@ -64,7 +64,7 @@ resource "helm_release" "fluent_bit" {
         # The group already exists (Terraform-managed, encrypted,
         # bounded retention); the role cannot create groups — so
         # auto-creation stays off and misconfig fails loudly.
-        logGroupName  = var.log_group_name
+        logGroupName    = var.log_group_name
         autoCreateGroup = false
       }
 
