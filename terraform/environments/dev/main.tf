@@ -152,3 +152,18 @@ module "arc" {
 
   depends_on = [module.eks]
 }
+
+# ---------------------------------------------------------------------------
+# Issue #17 — Fluent Bit log shipper (completes the logging pipeline)
+# ---------------------------------------------------------------------------
+module "fluentbit" {
+  source = "../../modules/fluentbit"
+
+  project          = var.project
+  environment      = var.environment
+  aws_region       = var.aws_region
+  log_group_name   = module.logging.app_log_group_name
+  shipper_role_arn = module.logging.shipper_role_arn
+
+  depends_on = [module.eks]
+}

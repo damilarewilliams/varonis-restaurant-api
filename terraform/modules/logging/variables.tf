@@ -40,3 +40,15 @@ variable "shipper_service_account" {
   type        = string
   default     = "fluent-bit"
 }
+
+variable "error_alarm_threshold" {
+  description = "ERROR log lines per 5 minutes before the alarm fires"
+  type        = number
+  default     = 5
+}
+
+variable "alarm_actions" {
+  description = "Actions (e.g. SNS topic ARNs) for the error alarm; empty = visible in console only"
+  type        = list(string)
+  default     = []
+}

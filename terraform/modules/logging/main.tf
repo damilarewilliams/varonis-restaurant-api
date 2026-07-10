@@ -81,3 +81,41 @@ resource "aws_iam_role_policy" "shipper_write" {
   role   = aws_iam_role.shipper.id
   policy = data.aws_iam_policy_document.shipper_write.json
 }
+
+# ---------------------------------------------------------------------------
+# Monitoring on the logs (Issue #17): structured JSON makes ERROR lines
+# machine-countable. The filter turns them into a metric; the alarm
+# turns a spike into a signal.
+# ---------------------------------------------------------------------------
+resource "aws_cloudwatch_log_metric_filter" "app_errors" {
+  name           = "${local.name_prefix}-app-errors"
+  log_group_name = aws_cloudwatch_log_group.app.name
+
+  # Matches the app's JSON formatter: {"level": "ERROR", ...}
+  pattern = "{ $.level = \"ERROR\" }"
+
+  metric_transformation {
+    name          = "ApplicationErrors"
+    namespace     = "${var.project}/${var.environment}"
+    value         = "1"
+    default_value = "0"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "app_errors" {
+  alarm_name          = "${local.name_prefix}-app-error-spike"
+  alarm_description   = "More than ${var.error_alarm_threshold} application ERROR logs in 5 minutes"
+  namespace           = "${var.project}/${var.environment}"
+  metric_name         = "ApplicationErrors"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = var.error_alarm_threshold
+  comparison_operator = "GreaterThanThreshold"
+
+  # No datapoints = no errors = healthy, not unknown.
+  treat_missing_data = "notBreaching"
+
+  # Empty by default: wire an SNS topic ARN in when a pager exists.
+  alarm_actions = var.alarm_actions
+}
