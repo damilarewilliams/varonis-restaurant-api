@@ -16,9 +16,10 @@ image:
 serviceAccount:
   create: true
   name: restaurant-api
-  # IRSA: annotate with the api role from terraform output api_irsa_role_arn
-  #   eks.amazonaws.com/role-arn: arn:aws:iam::<account>:role/varonis-restaurant-api-dev-api
-  annotations: {}
+  # IRSA: the api role from terraform output api_irsa_role_arn — this is
+  # how the pod reads DynamoDB with zero stored credentials.
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::923894195596:role/varonis-restaurant-api-dev-api
 # Non-sensitive runtime configuration -> ConfigMap -> env vars.
 config:
   environment: production
