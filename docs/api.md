@@ -20,15 +20,21 @@ curl "$BASE/api/v1/recommendations?style=italian&vegetarian=true"
 
 ```json
 {
-  "restaurantRecommendation": [
-    {"id": "r-001", "name": "La Trattoria", "style": "Italian",
-     "address": "12 Herzl St, Tel Aviv", "vegetarian": true,
-     "open_hour": 9, "close_hour": 23}
-  ]
+  "restaurantRecommendation": {
+    "name": "La Trattoria",
+    "style": "Italian",
+    "address": "12 Herzl St, Tel Aviv",
+    "openHour": "09:00",
+    "closeHour": "23:00",
+    "vegetarian": true
+  }
 }
 ```
 
-No matches returns an empty list (200). Invalid input (e.g.
+The response is a **single recommendation** matching the assignment's
+contract exactly (camelCase keys, `HH:MM` hours). When several
+restaurants match, the first is returned (deterministic). No match
+returns **404** with a `detail` message. Invalid input (e.g.
 `vegetarian=maybe`, `style` > 50 chars) returns **422** with a structured
 pydantic error body — validation is declarative, no handler code runs.
 

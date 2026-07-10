@@ -15,33 +15,40 @@ def test_readiness(client):
 
 
 def test_recommendations_response_contract(client):
+    """Matches the assignment's example exactly: a SINGLE object under
+    restaurantRecommendation, camelCase keys, hours as HH:MM strings."""
     response = client.get("/api/v1/recommendations")
     assert response.status_code == 200
     body = response.json()
-    assert "restaurantRecommendation" in body  # camelCase envelope
-    assert len(body["restaurantRecommendation"]) > 0
-    first = body["restaurantRecommendation"][0]
-    assert {"id", "name", "style", "address", "vegetarian", "open_hour", "close_hour"} <= set(first)
+    assert "restaurantRecommendation" in body
+    rec = body["restaurantRecommendation"]
+    assert isinstance(rec, dict)  # one recommendation, not a list
+    assert set(rec) == {"name", "style", "address", "openHour", "closeHour", "vegetarian"}
+    assert len(rec["openHour"]) == 5 and rec["openHour"][2] == ":"   # "09:00"
+    assert len(rec["closeHour"]) == 5 and rec["closeHour"][2] == ":"
 
 
 def test_filter_by_style(client):
     body = client.get("/api/v1/recommendations", params={"style": "italian"}).json()
-    results = body["restaurantRecommendation"]
-    assert results and all(r["style"].lower() == "italian" for r in results)
+    assert body["restaurantRecommendation"]["style"].lower() == "italian"
 
 
 def test_filter_by_vegetarian(client):
     body = client.get("/api/v1/recommendations", params={"vegetarian": "true"}).json()
-    results = body["restaurantRecommendation"]
-    assert results and all(r["vegetarian"] for r in results)
+    assert body["restaurantRecommendation"]["vegetarian"] is True
 
 
 def test_combined_filters(client):
-    body = client.get(
+    rec = client.get(
         "/api/v1/recommendations", params={"style": "Italian", "vegetarian": "true"}
-    ).json()
-    results = body["restaurantRecommendation"]
-    assert all(r["style"] == "Italian" and r["vegetarian"] for r in results)
+    ).json()["restaurantRecommendation"]
+    assert rec["style"] == "Italian" and rec["vegetarian"] is True
+
+
+def test_no_match_returns_404(client):
+    response = client.get("/api/v1/recommendations", params={"style": "Martian"})
+    assert response.status_code == 404
+    assert "detail" in response.json()
 
 
 def test_validation_rejects_bad_boolean(client):
