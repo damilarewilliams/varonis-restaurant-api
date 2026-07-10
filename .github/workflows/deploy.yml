@@ -9,6 +9,7 @@
 #
 # Required repo configuration (one-time, documented in Issue #15):
 #   Variables: AWS_REGION, AWS_TERRAFORM_ROLE_ARN, AWS_DELIVERY_ROLE_ARN, ECR_REPOSITORY
+#   Secrets: ARC_GITHUB_TOKEN (PAT for ARC runner registration)
 #   Environments: dev-infra-plan (unprotected), dev-infra (required reviewers)
 name: Deploy
 
@@ -56,6 +57,11 @@ jobs:
     if: needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     environment: dev-infra-plan
+    env:
+      # Without this, CI plans see an empty arc_github_token, the
+      # count-gated ARC module drops out of the configuration, and every
+      # CI apply destroys ARC (which the next local apply resurrects).
+      TF_VAR_arc_github_token: ${{ secrets.ARC_GITHUB_TOKEN }}
     defaults:
       run:
         working-directory: terraform/environments/dev
@@ -127,6 +133,10 @@ jobs:
     # The protected environment: GitHub pauses here until a required
     # reviewer approves (Issue #15). Approval == permission to apply.
     environment: dev-infra
+    env:
+      # Same reason as terraform-plan: the apply refreshes state and
+      # must see the ARC module in the configuration.
+      TF_VAR_arc_github_token: ${{ secrets.ARC_GITHUB_TOKEN }}
     defaults:
       run:
         working-directory: terraform/environments/dev
