@@ -291,3 +291,31 @@ easy. On a personal repository the sole maintainer approves their own
 applies; in an organization the reviewer set would exclude the author.
 The bot bypass means a compromised workflow with `contents: write` could
 push to main — mitigated by CODEOWNERS review on all workflow changes.
+
+---
+
+## ADR-010: Bootstrap trust anchors — what must exist before the pipeline can
+
+**Date:** 2026-07-10 · **Status:** Accepted
+
+**Context.** "Everything is provisioned by the pipeline" is circular at
+t=0: the pipeline needs AWS credentials (an OIDC provider + IAM role that
+something must create), Terraform needs a state backend (a bucket that
+cannot manage itself), and the CI role needs Kubernetes access (an EKS
+access entry that only an existing cluster admin can grant). Discovered
+concretely when CI's kubernetes/helm providers failed `Unauthorized`:
+the cluster creator gets an admin access entry automatically; a CI role
+does not.
+
+**Decision.** Accept exactly three bootstrap actions performed once with
+operator credentials, each documented where it lives: (1) the state
+bucket (CLI commands in backend.tf), (2) the first `terraform apply`,
+which creates the OIDC provider, CI roles, and the CI role's cluster
+access entry — from then on the pipeline is self-hosting, (3) the ARC
+PAT placed in GitHub Secrets. Everything else, including later changes
+to the trust anchors themselves, flows through the pipeline.
+
+**Consequences.** The bootstrap is a documented, finite list rather than
+an implicit pile of console actions; a fresh account reaches
+pipeline-self-sufficiency in one local apply. The trade-off is that the
+first apply runs ungated — reviewed only by the operator running it.

@@ -23,6 +23,36 @@ GitHub → GitHub Actions → Terraform (plan → approval → apply)
 
 Full diagram and rationale: [docs/architecture.md](docs/architecture.md).
 
+## Deployment status
+
+Deployed and verified end-to-end on AWS (account-scoped resources, region
+us-east-1): every pipeline stage has run green against the live cluster —
+Terraform plan → human approval → apply, image build → Trivy gate → ECR
+push → GitOps values bump → ArgoCD sync → in-cluster verification. The API
+serves the assignment contract from a KMS-encrypted DynamoDB table via
+IRSA (no stored credentials anywhere in the chain).
+
+Verify against the live cluster:
+
+```bash
+aws eks update-kubeconfig --name varonis-restaurant-api-dev --region us-east-1
+kubectl -n restaurant-api port-forward svc/varonis-restaurant-api-dev 8000:80 &
+curl "localhost:8000/api/v1/recommendations?style=nigerian"
+```
+
+Known gaps, accepted deliberately for the exercise and documented in
+[docs/security.md](docs/security.md): no ALB/Ingress controller (access is
+port-forward; the chart's Ingress is written but disabled), no
+metrics-server (the HPA is declared but cannot read CPU), and hours are
+UTC whole-hours (per-restaurant timezones would need a tz field).
+
+**Scope note:** the assignment asks for a recommendation API, IaC, secure
+logging, and production-grade practice. This repo deliberately goes
+further — EKS/GitOps/ArgoCD, self-hosted CD runners, plan-approval gates,
+OIDC-federated CI with zero static AWS keys — to demonstrate platform
+thinking, not because the brief demands it. The decision log records what
+each layer buys and what a smaller build would have looked like.
+
 ## Repository layout
 
 ```

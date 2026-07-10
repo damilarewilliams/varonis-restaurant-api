@@ -77,3 +77,53 @@ cluster can't block them (ADR-005). If GitHub itself is the problem: run
 plan/apply locally with your admin identity against the same remote
 state — then reconcile by merging the change afterward so Git matches
 reality.
+
+## Node group stuck creating, zero EC2 instances appear
+
+Check the node group's Auto Scaling Group activities — the console hides
+the real error:
+
+```bash
+ASG=$(aws autoscaling describe-auto-scaling-groups \
+  --query "AutoScalingGroups[?contains(AutoScalingGroupName, 'varonis')].AutoScalingGroupName" --output text)
+aws autoscaling describe-scaling-activities --auto-scaling-group-name "$ASG" \
+  --max-items 5 --query "Activities[].[StatusCode,StatusMessage]"
+```
+
+Two causes seen in practice:
+
+- **vCPU quota**: `You've reached your quota` → check quota L-1216C47A
+  (Running On-Demand Standard vCPUs); a value below 4 cannot run even a
+  small node group. Request an increase or use another account.
+- **AWS Free Plan**: `The specified instance type is not eligible for
+  Free Tier` → accounts on the post-2025 Free Plan can only launch
+  free-tier instance types regardless of quota. Upgrade the account to
+  the paid plan (Billing console); propagation takes a few minutes and
+  the ASG retries automatically.
+
+## CI applies keep destroying the ARC module (and local applies restore it)
+
+The ARC module is count-gated on `arc_github_token`. Any Terraform run
+that doesn't receive the token sees `count = 0` and plans a destroy.
+Every runner of Terraform — CI jobs and every local shell — must provide
+`TF_VAR_arc_github_token`; in CI it comes from the `ARC_GITHUB_TOKEN`
+secret. If ARC vanished: set the token and re-apply.
+
+## Never re-run an old Deploy run
+
+Re-running a workflow run checks out its **original commit**. If infra
+code has moved since, the re-run applies stale configuration against
+current state — i.e., a rollback nobody asked for. Trigger a fresh run
+(new commit to main) instead.
+
+## Pod Ready but DynamoDB calls fail
+
+Distinguish by the error in the pod logs:
+
+- `NoCredentialsError` — the pod was created before the service account
+  carried the IRSA annotation. IRSA is injected at pod **creation**:
+  delete the pod after the annotation syncs and let the ReplicaSet
+  recreate it.
+- `AccessDeniedException ... kms:Decrypt` — the table is CMK-encrypted;
+  the reader role needs `kms:Decrypt` on the data key in addition to the
+  DynamoDB read actions (iam module wires this).
