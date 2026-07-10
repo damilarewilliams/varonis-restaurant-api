@@ -73,6 +73,18 @@ data "aws_iam_policy_document" "api_dynamodb_read" {
     ]
     resources = var.dynamodb_table_arns
   }
+
+  statement {
+    sid = "DecryptTableData"
+    # The table is encrypted with a customer-managed key: DynamoDB
+    # decrypts on the caller's behalf, so the caller needs kms:Decrypt
+    # on exactly that key. Decrypt only — the API never writes.
+    actions = [
+      "kms:Decrypt",
+      "kms:DescribeKey",
+    ]
+    resources = [var.dynamodb_kms_key_arn]
+  }
 }
 
 resource "aws_iam_role_policy" "api_dynamodb_read" {
