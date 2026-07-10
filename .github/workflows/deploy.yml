@@ -79,7 +79,7 @@ jobs:
       - run: terraform validate
 
       - name: Plan
-        run: terraform plan -input=false -out=tfplan
+        run: terraform plan -input=true -out=tfplan
 
       - name: Plan summary
         run: |
@@ -126,7 +126,7 @@ jobs:
           path: terraform/environments/dev
 
       - name: Apply the reviewed plan
-        run: terraform apply -input=false tfplan
+        run: terraform apply -input=true tfplan
 
       - name: Infrastructure verification
         run: |
