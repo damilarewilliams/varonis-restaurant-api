@@ -59,3 +59,5 @@ kubeconfig.*
 .DS_Store
 Thumbs.db
 *.tfplan
+tfplan
+destroy.tfplan
