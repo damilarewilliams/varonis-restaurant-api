@@ -194,7 +194,7 @@ jobs:
       # BEFORE the image reaches the registry. ECR scan-on-push is the
       # second, continuous layer behind this.
       - name: Trivy scan (gate)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
           format: table
