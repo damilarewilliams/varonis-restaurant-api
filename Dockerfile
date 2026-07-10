@@ -19,7 +19,7 @@ COPY app ./app
 RUN pip install --no-cache-dir --prefix=/install .
 
 # ============================================================================
-# Stage 2: runtime — minimal surface. slim base, no compilers, non-root.
+# Stage 2: runtime — minimal surface. slim base, no compilers, non-root. Ideal
 # ============================================================================
 FROM python:3.12-slim
 
@@ -56,3 +56,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Exec-form CMD: uvicorn is PID 1 and receives SIGTERM directly, giving
 # clean graceful shutdown during Kubernetes rolling updates.
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
