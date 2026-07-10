@@ -36,17 +36,33 @@ Full diagram and rationale: [docs/architecture.md](docs/architecture.md).
 └── .github/      # Workflows, PR template, CODEOWNERS
 ```
 
+## Quickstart (local, no AWS required)
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+uvicorn app.main:app --reload --port 8080
+curl "localhost:8080/api/v1/recommendations?style=italian&vegetarian=true"
+```
+
 ## Documentation
 
 | Doc | Contents |
 |-----|----------|
-| [docs/architecture.md](docs/architecture.md) | System design and end-to-end flow |
-| [docs/decision-log.md](docs/decision-log.md) | Every non-obvious technical decision (ADRs) |
+| [docs/architecture.md](docs/architecture.md) | Production architecture: AWS, EKS, GitOps, CI/CD, security, logging |
+| [docs/api.md](docs/api.md) | Endpoints, parameters, examples, local run |
+| [terraform/README.md](terraform/README.md) | Infrastructure: module layout, conventions, remote state |
+| [docs/deployment.md](docs/deployment.md) | How deploys happen, rollback, first-time bootstrap |
+| [docs/plan-approval.md](docs/plan-approval.md) | CI/CD approval gate: Environments, reviewers, artifact integrity |
+| [docs/security.md](docs/security.md) | Every control by layer + accepted trade-offs |
+| [docs/monitoring.md](docs/monitoring.md) | Probes, log pipeline, queries, alarms, CD verification |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Symptom-first runbook |
+| [docs/teardown.md](docs/teardown.md) | Ordered decommissioning with guardrails |
+| [docs/decision-log.md](docs/decision-log.md) | ADR-001–009: every non-obvious decision with alternatives |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branch workflow, commit and PR conventions |
 
-Additional docs (infrastructure, API, security, deployment, CI/CD, GitOps,
-monitoring, troubleshooting) are added under `docs/` as each area is built —
-tracked in the [GitHub Issues](https://github.com/damilarewilliams/varonis-restaurant-api/issues).
+Per-component detail lives beside the code: each Terraform module and the
+Helm chart carry their own README.
 
 ## Development workflow
 
