@@ -34,6 +34,11 @@ SAMPLE_RESTAURANTS: list[Restaurant] = [
         address="2 HaYarkon St, Tel Aviv", vegetarian=False,
         open_hour=22, close_hour=6,  # overnight
     ),
+    Restaurant(
+        id="r-007", name="Lagos Kitchen", style="Nigerian",
+        address="15 Florentin St, Tel Aviv", vegetarian=True,
+        open_hour=10, close_hour=22,
+    ),
 ]
 
 
