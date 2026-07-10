@@ -54,6 +54,12 @@ ingress:
   # Empty host = match all (dev). Set a real hostname when DNS exists.
   host: ""
 
+# Default-deny NetworkPolicy (Issue #16). vpcCidr must match the
+# networking module's vpc_cidr.
+networkPolicy:
+  enabled: true
+  vpcCidr: 10.0.0.0/16
+
 resources:
   requests:
     cpu: 100m
