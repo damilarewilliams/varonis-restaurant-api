@@ -51,7 +51,7 @@ kubectl get svc -n restaurant-api varonis-restaurant-api-dev \
 |---|---|
 | ![ArgoCD application](docs/images/argocd-application.png) | ArgoCD: `varonis-restaurant-api-dev` Healthy/Synced, auto-sync from `main` |
 | ![ArgoCD resource tree](docs/images/argocd-resource-tree.png) | Resource tree: Deployment, Service, ConfigMap, HPA, NetworkPolicy, 2 pods Running |
-| ![API contract response](docs/images/api-contract-response.png) | Live response: single `restaurantRecommendation`, camelCase, HH:MM hours — served from KMS-encrypted DynamoDB via IRSA |
+| ![Local test evidence](docs/images/local-test-evidence.png) | Local quickstart: test suite green, contract responses from the in-memory backend — no AWS required |
 
 Known gaps, accepted deliberately for the exercise and documented in
 [docs/security.md](docs/security.md): no ALB/Ingress controller (access is
