@@ -179,12 +179,30 @@ resource "aws_eks_node_group" "this" {
 # adding it means adding its IRSA role — do that when a need exists.
 # ---------------------------------------------------------------------------
 resource "aws_eks_addon" "core" {
-  for_each = toset(["vpc-cni", "coredns", "kube-proxy"])
+  for_each = toset(["coredns", "kube-proxy"])
 
   cluster_name = aws_eks_cluster.this.name
   addon_name   = each.value
 
   # On conflicting self-managed config, prefer the managed add-on.
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  depends_on = [aws_eks_node_group.this]
+}
+
+# vpc-cni gets its own resource: NetworkPolicy objects are inert unless
+# the CNI enforces them (aws-network-policy-agent). Without this flag the
+# chart's default-deny policy would silently do nothing — the worst kind
+# of security control.
+resource "aws_eks_addon" "vpc_cni" {
+  cluster_name = aws_eks_cluster.this.name
+  addon_name   = "vpc-cni"
+
+  configuration_values = jsonencode({
+    enableNetworkPolicy = "true"
+  })
+
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "OVERWRITE"
 
