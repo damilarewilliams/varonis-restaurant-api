@@ -11,7 +11,7 @@ image:
   repository: "923894195596.dkr.ecr.us-east-1.amazonaws.com/varonis-restaurant-api-dev"
   # Set by CI on every delivery (git SHA). Never "latest": immutable tags
   # are what make GitOps rollback trustworthy (ADR-007).
-  tag: "e2434695b342e3e5ed827e007108f2f12c2316ad"
+  tag: "55a1bc7cb7a4a007aa952975eb3cc9a3e36717ee"
   pullPolicy: IfNotPresent
 serviceAccount:
   create: true
