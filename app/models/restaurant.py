@@ -27,12 +27,38 @@ class Restaurant(BaseModel):
         return hour >= self.open_hour or hour < self.close_hour
 
 
-class RecommendationResponse(BaseModel):
-    """Response envelope. Serializes with the camelCase key the
-    assignment specifies: {"restaurantRecommendation": [...]}."""
+class RestaurantOut(BaseModel):
+    """Presentation model matching the assignment's response contract
+    exactly: camelCase keys, hours as "HH:MM" strings, no internal id.
+    (The spec example writes "clouseHour" — treated as an evident typo
+    for closeHour.) Kept separate from the domain model so storage
+    (snake_case, integer hours) never leaks contract concerns."""
 
     model_config = ConfigDict(populate_by_name=True)
 
-    restaurant_recommendation: list[Restaurant] = Field(
-        alias="restaurantRecommendation", default_factory=list
-    )
+    name: str
+    style: str
+    address: str
+    open_hour: str = Field(alias="openHour")
+    close_hour: str = Field(alias="closeHour")
+    vegetarian: bool
+
+    @classmethod
+    def from_domain(cls, restaurant: Restaurant) -> "RestaurantOut":
+        return cls(
+            name=restaurant.name,
+            style=restaurant.style,
+            address=restaurant.address,
+            open_hour=f"{restaurant.open_hour:02d}:00",
+            close_hour=f"{restaurant.close_hour:02d}:00",
+            vegetarian=restaurant.vegetarian,
+        )
+
+
+class RecommendationResponse(BaseModel):
+    """Response envelope per the assignment: a SINGLE recommendation
+    ("return a recommendation for a restaurant"), not a list."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    restaurant_recommendation: RestaurantOut = Field(alias="restaurantRecommendation")

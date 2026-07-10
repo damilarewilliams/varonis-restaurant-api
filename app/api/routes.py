@@ -7,9 +7,9 @@ vegetarian=maybe, style longer than 50 chars).
 
 import logging
 
-from fastapi import APIRouter, Query, Request, Response, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 
-from app.models.restaurant import RecommendationResponse
+from app.models.restaurant import RecommendationResponse, RestaurantOut
 from app.services.recommendation import recommend
 
 logger = logging.getLogger(__name__)
@@ -61,4 +61,13 @@ def get_recommendations(
             "result_count": len(matches),
         }},
     )
-    return RecommendationResponse(restaurant_recommendation=matches)
+    if not matches:
+        raise HTTPException(
+            status_code=404, detail="No restaurant matches the given criteria"
+        )
+    # The contract asks for ONE recommendation. First match keeps the
+    # choice deterministic (testable); random.choice is the alternative
+    # if variety were preferred over reproducibility.
+    return RecommendationResponse(
+        restaurant_recommendation=RestaurantOut.from_domain(matches[0])
+    )
