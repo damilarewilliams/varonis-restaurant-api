@@ -32,13 +32,26 @@ push → GitOps values bump → ArgoCD sync → in-cluster verification. The API
 serves the assignment contract from a KMS-encrypted DynamoDB table via
 IRSA (no stored credentials anywhere in the chain).
 
-Verify against the live cluster:
+Try it — the Service is exposed via a public ELB for the review window
+(see the submission email for the current hostname, or resolve it with
+cluster access):
 
 ```bash
+curl "http://<elb-hostname>/api/v1/recommendations?style=nigerian"
+
+# with cluster access:
 aws eks update-kubeconfig --name varonis-restaurant-api-dev --region us-east-1
-kubectl -n restaurant-api port-forward svc/varonis-restaurant-api-dev 8000:80 &
-curl "localhost:8000/api/v1/recommendations?style=nigerian"
+kubectl get svc -n restaurant-api varonis-restaurant-api-dev \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
+
+### Verified evidence
+
+| | |
+|---|---|
+| ![ArgoCD application](docs/images/argocd-application.png) | ArgoCD: `varonis-restaurant-api-dev` Healthy/Synced, auto-sync from `main` |
+| ![ArgoCD resource tree](docs/images/argocd-resource-tree.png) | Resource tree: Deployment, Service, ConfigMap, HPA, NetworkPolicy, 2 pods Running |
+| ![API contract response](docs/images/api-contract-response.png) | Live response: single `restaurantRecommendation`, camelCase, HH:MM hours — served from KMS-encrypted DynamoDB via IRSA |
 
 Known gaps, accepted deliberately for the exercise and documented in
 [docs/security.md](docs/security.md): no ALB/Ingress controller (access is

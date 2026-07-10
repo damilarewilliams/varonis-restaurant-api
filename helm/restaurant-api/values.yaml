@@ -36,7 +36,12 @@ secret:
 # Additional env vars (name/value or valueFrom), merged into the container.
 extraEnv: []
 service:
-  type: ClusterIP
+  # LoadBalancer for the review window: EKS's cloud controller provisions
+  # a public ELB so reviewers can curl the API without cluster access.
+  # Accepted trade-off (public, unauthenticated demo endpoint) — revert
+  # to ClusterIP after review; the production path is the Ingress below
+  # once the AWS Load Balancer Controller is installed.
+  type: LoadBalancer
   port: 80
 # Disabled for the take-home demo: the AWS Load Balancer Controller is
 # not installed (documented gap, docs/security.md trade-offs), so an
