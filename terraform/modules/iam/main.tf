@@ -317,3 +317,28 @@ resource "aws_iam_role_policy" "gha_terraform_iam" {
   role   = aws_iam_role.gha_terraform.id
   policy = data.aws_iam_policy_document.gha_terraform_iam.json
 }
+
+# Terraform manages in-cluster resources (namespaces, Helm releases for
+# ArgoCD/ARC/Fluent Bit), so the CI terraform role also needs KUBERNETES
+# credentials, not just AWS ones — an EKS access entry. Without it the
+# kubernetes/helm providers get "Unauthorized" in CI: the cluster creator
+# (local operator) receives an admin access entry automatically, a CI
+# role does not. Cluster-scoped admin is warranted here — this role
+# provisions the platform itself. The runner role above stays namespaced
+# view-only; the asymmetry is deliberate.
+resource "aws_eks_access_entry" "gha_terraform" {
+  cluster_name  = var.cluster_name
+  principal_arn = aws_iam_role.gha_terraform.arn
+}
+
+resource "aws_eks_access_policy_association" "gha_terraform_admin" {
+  cluster_name  = var.cluster_name
+  principal_arn = aws_iam_role.gha_terraform.arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.gha_terraform]
+}
