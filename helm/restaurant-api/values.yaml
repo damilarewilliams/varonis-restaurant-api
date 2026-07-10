@@ -44,8 +44,13 @@ service:
   type: ClusterIP
   port: 80
 
+# Disabled for the take-home demo: the AWS Load Balancer Controller is
+# not installed (documented gap, docs/security.md trade-offs), so an
+# Ingress would sit inert and hold ArgoCD health at Progressing.
+# Access for the demo: kubectl port-forward (docs/api.md).
+# Flip to true once the controller exists.
 ingress:
-  enabled: true
+  enabled: false
   className: alb
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
