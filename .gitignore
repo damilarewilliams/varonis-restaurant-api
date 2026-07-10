@@ -58,3 +58,4 @@ kubeconfig.*
 *.swp
 .DS_Store
 Thumbs.db
+*.tfplan

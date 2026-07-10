@@ -40,3 +40,13 @@ variable "argocd_chart_version" {
   type        = string
   default     = ""
 }
+
+variable "argocd_apps_chart_version" {
+  description = <<-EOT
+    argocd-apps Helm chart version (renders the Application CR).
+    Empty string = latest at install time; same pinning advice as
+    argocd_chart_version.
+  EOT
+  type        = string
+  default     = ""
+}
