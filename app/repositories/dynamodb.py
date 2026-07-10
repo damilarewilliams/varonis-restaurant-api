@@ -1,9 +1,9 @@
-"""DynamoDB repository — the production backend.
+"""DynamoDB repository - the production backend.
 
 Uses a full-table Scan: the dataset is a small, bounded catalog and the
 recommendation query filters on multiple optional attributes, which fits
 scan-and-filter better than designing GSIs per filter combination. At real
-scale this would become a GSI on `style` plus in-app residual filtering —
+scale this would become a GSI on `style` plus in-app residual filtering -
 documented trade-off.
 """
 

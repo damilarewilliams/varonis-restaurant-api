@@ -45,7 +45,7 @@ variable "enable_interface_endpoints" {
     Create interface VPC endpoints (ECR api/dkr, CloudWatch Logs) so image
     pulls and log shipping stay on the AWS backbone instead of traversing
     NAT. Gateway endpoints (S3, DynamoDB) are free and always created.
-    Interface endpoints bill per-hour per-AZ — this flag lets dev opt out.
+    Interface endpoints bill per-hour per-AZ - this flag lets dev opt out.
   EOT
   type        = bool
   default     = true

@@ -1,12 +1,12 @@
 # Module: argocd
 # Installs ArgoCD (the GitOps reconciler, ADR-004) AND declares the
-# Application that points it at the app chart — two helm_releases, so a
+# Application that points it at the app chart - two helm_releases, so a
 # fresh environment converges from `terraform apply` to a deployed app
 # with zero manual kubectl steps.
 #
 # Why two releases and not extraObjects on one: the argo-cd chart
 # installs the Application CRD, but Helm validates the WHOLE manifest
-# against the API server before creating anything — an Application CR
+# against the API server before creating anything - an Application CR
 # in extraObjects fails with "no matches for kind Application" on a
 # fresh cluster. The upstream argocd-apps chart exists precisely for
 # this: it renders Application CRs in a release that runs after the
@@ -36,7 +36,7 @@ resource "helm_release" "argocd" {
 
   values = [
     yamlencode({
-      # dev-appropriate ArgoCD posture: no public exposure — the UI is
+      # dev-appropriate ArgoCD posture: no public exposure - the UI is
       # reached via `kubectl port-forward svc/argocd-server -n argocd 8080:443`.
       server = {
         service = {
@@ -91,7 +91,7 @@ resource "helm_release" "application" {
           syncPolicy = {
             automated = {
               # prune: resources removed from Git are removed from the
-              # cluster. selfHeal: manual cluster edits are reverted —
+              # cluster. selfHeal: manual cluster edits are reverted -
               # Git is the ONLY write path to the app namespace.
               prune    = true
               selfHeal = true

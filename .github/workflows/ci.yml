@@ -1,4 +1,4 @@
-# CI — runs on every pull request. These jobs become required status
+# CI - runs on every pull request. These jobs become required status
 # checks in branch protection: red CI = unmergeable PR.
 name: CI
 
@@ -48,7 +48,7 @@ jobs:
       - name: Format check
         run: terraform fmt -check -recursive ../..
 
-      - name: Init (no backend — validation needs providers, not state)
+      - name: Init (no backend - validation needs providers, not state)
         run: terraform init -backend=false
 
       - name: Validate

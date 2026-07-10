@@ -15,14 +15,14 @@ controls built in.
 - **AES256 encryption** rather than a customer KMS key: images are not
   secret material; CMKs are reserved for data/logs (Issue #9/#11).
 - **Lifecycle policy**: untagged images expire in 7 days; only the last
-  `max_image_count` (default 20) tagged images are retained — a bounded
+  `max_image_count` (default 20) tagged images are retained - a bounded
   rollback window instead of unbounded storage spend.
 
 ## Inputs
 
 | Name | Description | Default |
 |------|-------------|---------|
-| project / environment | Naming and tags | — |
+| project / environment | Naming and tags | - |
 | max_image_count | Tagged images retained | `20` |
 
 ## Outputs

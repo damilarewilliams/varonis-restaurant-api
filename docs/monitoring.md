@@ -7,7 +7,7 @@ How the system knows it's healthy, and how humans find out when it isn't.
 | Endpoint | Meaning | Consumed by | On failure |
 |----------|---------|-------------|------------|
 | `/health/live` | Process is up | Kubernetes liveness probe, Docker HEALTHCHECK, ALB health check | Container restarted |
-| `/health/ready` | Dependencies reachable (DynamoDB ping) | Kubernetes readiness probe, CD verification | Pod removed from Service endpoints — **not** restarted |
+| `/health/ready` | Dependencies reachable (DynamoDB ping) | Kubernetes readiness probe, CD verification | Pod removed from Service endpoints - **not** restarted |
 
 The split is deliberate (app Issue #3, chart Issue #12): a DynamoDB outage
 makes pods *not ready* (traffic stops) but never *not live* (no restart
@@ -27,7 +27,7 @@ FastAPI app ── masks sensitive fields in-process (app/core/logging.py)
 ```
 
 Also shipping: EKS control-plane logs (api, audit, authenticator) to
-`/aws/eks/<cluster>/cluster` — the API-server audit trail.
+`/aws/eks/<cluster>/cluster` - the API-server audit trail.
 
 ## Querying (CloudWatch Logs Insights)
 
@@ -45,12 +45,12 @@ fields status | filter event = "http_request"
 | stats count() as requests, sum(status >= 500) as errors by bin(5m)
 ```
 
-These work because every log line is one JSON object — the payoff of
+These work because every log line is one JSON object - the payoff of
 structured logging.
 
 ## Alerting
 
-One alarm to start: `*-app-error-spike` — more than 5 ERROR lines in 5
+One alarm to start: `*-app-error-spike` - more than 5 ERROR lines in 5
 minutes (`treat_missing_data = notBreaching`: silence is health, not
 mystery). `alarm_actions` is an empty list by default; wiring an SNS
 topic + subscription is a one-variable change when a pager exists.
@@ -62,7 +62,7 @@ Every delivery is verified in-cluster by an ephemeral ARC runner:
 ArgoCD convergence to the exact pushed SHA → `kubectl rollout status` →
 `/health/live` + `/health/ready` over Service DNS → smoke tests
 (recommendation query returns the envelope; invalid input returns 422).
-A deployment isn't "done" when the pipeline pushes — it's done when the
+A deployment isn't "done" when the pipeline pushes - it's done when the
 new pods answer correctly.
 
 ## Gaps acknowledged

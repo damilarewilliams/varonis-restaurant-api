@@ -9,7 +9,7 @@ Usage:
     # table defaults to $APP_DYNAMODB_TABLE if set
 
 Credentials come from the ambient AWS config (profile/SSO locally,
-IRSA in-cluster) — never from arguments or code.
+IRSA in-cluster) - never from arguments or code.
 """
 
 import argparse
@@ -47,7 +47,7 @@ def main() -> int:
         print(f"seeded {restaurant.id}: {restaurant.name}")
 
     count = table.scan(Select="COUNT")["Count"]
-    print(f"done — table {args.table} now holds {count} items")
+    print(f"done - table {args.table} now holds {count} items")
     return 0
 
 

@@ -1,6 +1,6 @@
 # Module: iam
 # Every principal in the system gets exactly the permissions its job
-# requires — nothing is shared, nothing is account-wide:
+# requires - nothing is shared, nothing is account-wide:
 #
 #   API pod (IRSA)     → read one DynamoDB table
 #   ARC runner (IRSA)  → describe the cluster + namespaced view access
@@ -27,7 +27,7 @@ locals {
 }
 
 # ===========================================================================
-# IRSA role: API pod — DynamoDB read on exactly the restaurants table.
+# IRSA role: API pod - DynamoDB read on exactly the restaurants table.
 # Trust is scoped to ONE service account in ONE namespace: no other pod
 # in the cluster can assume this role.
 # ===========================================================================
@@ -78,7 +78,7 @@ data "aws_iam_policy_document" "api_dynamodb_read" {
     sid = "DecryptTableData"
     # The table is encrypted with a customer-managed key: DynamoDB
     # decrypts on the caller's behalf, so the caller needs kms:Decrypt
-    # on exactly that key. Decrypt only — the API never writes.
+    # on exactly that key. Decrypt only - the API never writes.
     actions = [
       "kms:Decrypt",
       "kms:DescribeKey",
@@ -94,9 +94,9 @@ resource "aws_iam_role_policy" "api_dynamodb_read" {
 }
 
 # ===========================================================================
-# IRSA role: ARC runner pods — CD verification only.
+# IRSA role: ARC runner pods - CD verification only.
 # AWS-side: describe the cluster (to build a kubeconfig).
-# Kubernetes-side: an EKS access entry grants namespaced VIEW access —
+# Kubernetes-side: an EKS access entry grants namespaced VIEW access -
 # rollout status and health checks need to read, never mutate. ArgoCD
 # does the mutating; the runner only verifies.
 # ===========================================================================
@@ -161,7 +161,7 @@ resource "aws_eks_access_policy_association" "runner_view" {
 }
 
 # ===========================================================================
-# GitHub OIDC provider — GitHub Actions exchanges its job token for
+# GitHub OIDC provider - GitHub Actions exchanges its job token for
 # short-lived AWS credentials. This is what removes AWS access keys
 # from GitHub Secrets entirely.
 # ===========================================================================
@@ -176,7 +176,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 # ---------------------------------------------------------------------------
-# CI role 1: delivery — ECR push only, main branch only.
+# CI role 1: delivery - ECR push only, main branch only.
 # The `sub` condition means a job on a PR branch or a fork cannot
 # assume this role: only workflows running on refs/heads/main.
 # ---------------------------------------------------------------------------
@@ -237,7 +237,7 @@ resource "aws_iam_role_policy" "gha_delivery" {
 }
 
 # ---------------------------------------------------------------------------
-# CI role 2: terraform — assumable ONLY by jobs running in the protected
+# CI role 2: terraform - assumable ONLY by jobs running in the protected
 # GitHub Environment (the plan/apply approval gate, Issue #15). Broad by
 # necessity (it provisions everything), but bounded:
 #   - PowerUserAccess denies all IAM writes
@@ -332,10 +332,10 @@ resource "aws_iam_role_policy" "gha_terraform_iam" {
 
 # Terraform manages in-cluster resources (namespaces, Helm releases for
 # ArgoCD/ARC/Fluent Bit), so the CI terraform role also needs KUBERNETES
-# credentials, not just AWS ones — an EKS access entry. Without it the
+# credentials, not just AWS ones - an EKS access entry. Without it the
 # kubernetes/helm providers get "Unauthorized" in CI: the cluster creator
 # (local operator) receives an admin access entry automatically, a CI
-# role does not. Cluster-scoped admin is warranted here — this role
+# role does not. Cluster-scoped admin is warranted here - this role
 # provisions the platform itself. The runner role above stays namespaced
 # view-only; the asymmetry is deliberate.
 resource "aws_eks_access_entry" "gha_terraform" {

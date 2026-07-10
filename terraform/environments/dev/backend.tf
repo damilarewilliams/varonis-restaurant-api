@@ -6,7 +6,7 @@
 # supported since Terraform 1.10, one less resource to provision and
 # pay for, same protection against concurrent applies.
 #
-# BOOTSTRAP (one-time, before first `terraform init`) — the state
+# BOOTSTRAP (one-time, before first `terraform init`) - the state
 # bucket cannot manage itself, so it is created once via CLI:
 #
 #   aws s3api create-bucket --bucket varonis-restaurant-api-tfstate-b \
@@ -23,7 +23,7 @@
 # Versioning = state history/recovery. Encryption = state contains
 # resource IDs and can contain secrets. Public access block = obvious.
 #
-# NOTE: S3 bucket names are globally unique — if this name is taken,
+# NOTE: S3 bucket names are globally unique - if this name is taken,
 # suffix it with your AWS account ID and update `bucket` below.
 
 terraform {

@@ -1,6 +1,6 @@
 # fluentbit module
 
-Deploys AWS for Fluent Bit as a DaemonSet — the shipper leg of the
+Deploys AWS for Fluent Bit as a DaemonSet - the shipper leg of the
 logging pipeline (app masks in-process → stdout → **Fluent Bit** →
 CMK-encrypted CloudWatch group).
 

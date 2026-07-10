@@ -11,29 +11,29 @@ provider for IRSA, and core add-ons. Implements
 - **Nodes in private subnets only.** No public IPs; egress via NAT or VPC
   endpoints (networking module).
 - **API access entries (`authentication_mode = "API"`)** instead of the
-  legacy aws-auth ConfigMap — auditable IAM-native access;
+  legacy aws-auth ConfigMap - auditable IAM-native access;
   `bootstrap_cluster_creator_admin_permissions` keeps Terraform able to
   manage in-cluster releases (ArgoCD, ARC) after creation.
 - **Node role carries zero application permissions.** Pods get AWS access
   through IRSA roles (Issue #10) bound to service accounts via the OIDC
-  provider created here — node-role permissions would leak to every pod.
-- **Control plane logs** (api, audit, authenticator) ship to CloudWatch —
+  provider created here - node-role permissions would leak to every pod.
+- **Control plane logs** (api, audit, authenticator) ship to CloudWatch -
   the API-server audit trail required by the logging architecture.
 - **Public endpoint + CIDR allowlist in dev** (variable): lets GitHub-hosted
   runners and your laptop reach the API without VPN; flip
   `endpoint_public_access=false` for the hardened private-only posture.
 - **`ignore_changes` on desired_size**: a future autoscaler owns node count;
   Terraform owns min/max bounds.
-- **EBS CSI omitted deliberately** — no persistent volumes in this system;
+- **EBS CSI omitted deliberately** - no persistent volumes in this system;
   install it (plus its IRSA role) only when a need exists.
 
 ## Inputs
 
 | Name | Description | Default |
 |------|-------------|---------|
-| project / environment | Naming and tags | — |
-| vpc_id | VPC for the cluster | — |
-| private_subnet_ids | Subnets for control plane ENIs + nodes | — |
+| project / environment | Naming and tags | - |
+| vpc_id | VPC for the cluster | - |
+| private_subnet_ids | Subnets for control plane ENIs + nodes | - |
 | cluster_version | Kubernetes minor version | `1.32` |
 | endpoint_public_access | Public API endpoint (dev convenience) | `true` |
 | endpoint_public_access_cidrs | Allowlist for public endpoint | `0.0.0.0/0` |

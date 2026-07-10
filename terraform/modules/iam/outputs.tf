@@ -1,10 +1,10 @@
 output "api_role_arn" {
-  description = "IRSA role for the API pod — annotate its ServiceAccount with this (Helm values)"
+  description = "IRSA role for the API pod - annotate its ServiceAccount with this (Helm values)"
   value       = aws_iam_role.api.arn
 }
 
 output "runner_role_arn" {
-  description = "IRSA role for ARC runner pods — annotate the runner ServiceAccount"
+  description = "IRSA role for ARC runner pods - annotate the runner ServiceAccount"
   value       = aws_iam_role.runner.arn
 }
 

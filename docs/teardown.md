@@ -15,7 +15,7 @@ kubectl -n restaurant-api delete ingress --all --ignore-not-found
 # wait for the ALB to disappear from EC2 > Load Balancers
 ```
 
-## 2. Empty ECR (force_delete=false will refuse otherwise — by design)
+## 2. Empty ECR (force_delete=false will refuse otherwise - by design)
 
 ```bash
 aws ecr batch-delete-image --repository-name varonis-restaurant-api-dev \
@@ -23,7 +23,7 @@ aws ecr batch-delete-image --repository-name varonis-restaurant-api-dev \
   --query 'imageIds' --output json)"
 ```
 
-## 3. Destroy — plan first, apply the reviewed plan
+## 3. Destroy - plan first, apply the reviewed plan
 
 ```bash
 cd terraform/environments/dev
@@ -33,10 +33,10 @@ terraform apply destroy.tfplan
 ```
 
 Expected notes: KMS keys enter their 7-day deletion window (recoverable,
-unbilled while pending) — not an error. If dev ever re-enabled DynamoDB
+unbilled while pending) - not an error. If dev ever re-enabled DynamoDB
 deletion protection, flip it off and re-plan.
 
-## 4. Delete the state bucket (last — it ran the destroy)
+## 4. Delete the state bucket (last - it ran the destroy)
 
 ```bash
 aws s3api delete-objects --bucket varonis-restaurant-api-tfstate \

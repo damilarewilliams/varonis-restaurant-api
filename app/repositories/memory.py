@@ -1,5 +1,5 @@
 """In-memory repository: local development and unit tests.
-Same interface as DynamoDB — swapping backends is a config change."""
+Same interface as DynamoDB - swapping backends is a config change."""
 
 from app.models.restaurant import Restaurant
 

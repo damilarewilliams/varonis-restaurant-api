@@ -12,7 +12,7 @@ locals {
 }
 
 data "aws_iam_policy_document" "key" {
-  # Root account retains full key administration — without this statement
+  # Root account retains full key administration - without this statement
   # the key can become unmanageable (a locked-out CMK is unrecoverable).
   statement {
     sid       = "EnableRootAccountAdmin"

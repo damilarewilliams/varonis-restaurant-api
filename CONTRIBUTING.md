@@ -55,7 +55,7 @@ gateways so EKS worker nodes never receive public IPs.
 - One issue per PR. Keep PRs reviewable (< ~500 lines where possible).
 - Fill in the PR template completely.
 - CI must be green before merge.
-- Never commit secrets, `.tfstate`, `.tfvars`, or kubeconfig files — `.gitignore` blocks these, do not force-add them.
+- Never commit secrets, `.tfstate`, `.tfvars`, or kubeconfig files - `.gitignore` blocks these, do not force-add them.
 
 ## Decision log
 

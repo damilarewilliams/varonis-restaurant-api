@@ -2,7 +2,7 @@
 
 Logs are treated as sensitive data (see docs/architecture.md):
 masking happens HERE, in-process, before a log line ever reaches
-stdout — collectors (Fluent Bit) and storage (CloudWatch) never
+stdout - collectors (Fluent Bit) and storage (CloudWatch) never
 see raw secrets.
 """
 
@@ -46,7 +46,7 @@ def mask_sensitive(value: Any) -> Any:
 
 
 class JsonFormatter(logging.Formatter):
-    """One JSON object per line — queryable in CloudWatch Logs Insights."""
+    """One JSON object per line - queryable in CloudWatch Logs Insights."""
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {

@@ -24,7 +24,7 @@ GitHub (source of truth)
 
 ## Key properties
 
-- **Everything as code.** All AWS resources are provisioned by Terraform modules —
+- **Everything as code.** All AWS resources are provisioned by Terraform modules -
   no console changes.
 - **GitOps.** The cluster state converges to what is declared in Git. Deployments
   happen by committing a new image tag to `values.yaml`; ArgoCD reconciles.
@@ -61,12 +61,12 @@ Design decisions:
   inbound traffic reaches pods exclusively through a load balancer in the
   public subnets, created by the Ingress controller.
 - **One NAT gateway per AZ** for AZ-fault isolation of outbound traffic. (A
-  single shared NAT is the cheaper dev-mode alternative — the Terraform
+  single shared NAT is the cheaper dev-mode alternative - the Terraform
   networking module exposes this as a variable so dev can run cheap while the
   architecture stays production-shaped.)
 - **VPC endpoints** for ECR, S3, CloudWatch Logs, and DynamoDB keep
   image pulls, log shipping, and data traffic on the AWS backbone instead of
-  traversing NAT — lower cost, smaller attack surface.
+  traversing NAT - lower cost, smaller attack surface.
 - **EKS API endpoint**: public with CIDR allowlist in dev (lets GitHub-hosted
   runners run Terraform without VPN infrastructure); private-only is the
   hardened option and is a module variable, not a redesign.
@@ -96,14 +96,14 @@ EKS cluster (managed control plane, 3 AZs)
   namespace (Issue #16).
 - The application ships as Deployment + Service + Ingress + ConfigMap + Secret
   + HPA, with resource requests/limits, liveness/readiness probes, and rolling
-  updates — packaged in the Helm chart (Issue #12).
+  updates - packaged in the Helm chart (Issue #12).
 
 ## GitOps with ArgoCD
 
 ArgoCD runs **inside the EKS cluster** (namespace `argocd`) and operates on a
 **pull model**: the cluster continuously pulls its desired state from Git
 rather than CI pushing manifests with `kubectl`. This means GitHub Actions
-never holds cluster-admin credentials — the deployment trust boundary stays
+never holds cluster-admin credentials - the deployment trust boundary stays
 inside AWS.
 
 ```
@@ -138,10 +138,10 @@ destination = in-cluster, namespace `restaurant-api`; sync policy =
 the new image tag into `helm/restaurant-api/values.yaml` on `main`. ArgoCD
 detects the commit (polling, ~3 min default; optionally a webhook for instant
 sync), re-renders the chart, and rolls the Deployment. **Rollback = `git
-revert`** of the values bump — the cluster converges back automatically.
+revert`** of the values bump - the cluster converges back automatically.
 
 **Bootstrap.** ArgoCD itself is installed by Terraform (Helm provider) so the
-"everything provisioned by Terraform" requirement holds — see ADR-004. The
+"everything provisioned by Terraform" requirement holds - see ADR-004. The
 `Application` CR is applied the same way, so a fresh environment comes up
 end-to-end from `terraform apply` with zero manual `kubectl` steps.
 
@@ -169,7 +169,7 @@ merge to main
 and posts a human-readable summary. The apply job targets a **GitHub
 Environment** with a **required reviewer**: GitHub pauses the job until an
 authorized person approves, and the job then applies the *downloaded artifact*
-(`terraform apply tfplan`) — the exact plan that was reviewed, not a fresh
+(`terraform apply tfplan`) - the exact plan that was reviewed, not a fresh
 plan that could differ. Details in Issue #15.
 
 **Loop prevention.** The values-bump commit is made with `[skip ci]` and the
@@ -188,7 +188,7 @@ Pipeline jobs are split across two runner types (see ADR-005):
 
 **ARC (actions-runner-controller)** is installed into the cluster by Terraform's
 Helm provider (same pattern as ArgoCD), in its own `arc-runners` namespace.
-Runners are **ephemeral** — a fresh pod per job, scaled from zero — and
+Runners are **ephemeral** - a fresh pod per job, scaled from zero - and
 authenticate to AWS via **IRSA**, not static credentials. Because only CD jobs
 target ARC, there is no circular dependency: Terraform never needs a runner
 that lives on the cluster it is creating, and CD jobs are only meaningful when
@@ -201,10 +201,10 @@ Defense in depth, layer by layer:
 | Layer | Control |
 |-------|---------|
 | Source | Branch protection, CODEOWNERS review, no secrets in Git (`.gitignore` + GitHub secret scanning) |
-| CI → AWS | **GitHub OIDC federation** — short-lived role assumption, zero long-lived AWS keys in GitHub Secrets |
+| CI → AWS | **GitHub OIDC federation** - short-lived role assumption, zero long-lived AWS keys in GitHub Secrets |
 | Supply chain | Trivy scans every image; pipeline fails on HIGH/CRITICAL CVEs before push |
 | Registry | Private ECR, scan-on-push enabled, immutable tags |
-| IAM | Least privilege per principal: CI role (plan/apply scoped), app pod role (DynamoDB read on one table), runner role (CD verification only) — all via IRSA where in-cluster |
+| IAM | Least privilege per principal: CI role (plan/apply scoped), app pod role (DynamoDB read on one table), runner role (CD verification only) - all via IRSA where in-cluster |
 | Network | Private nodes, security groups, NetworkPolicies between namespaces, VPC endpoints |
 | Data | DynamoDB encrypted at rest (KMS CMK), CloudWatch log groups KMS-encrypted, EBS volumes encrypted |
 | Runtime | Non-root container, read-only root filesystem, no privilege escalation, resource limits |
@@ -233,14 +233,14 @@ FastAPI app
 ```
 
 - **Masking happens in the application**, before a log line ever leaves the
-  process — collectors and storage never see raw secrets. Masking at the
+  process - collectors and storage never see raw secrets. Masking at the
   collector would leave a window where secrets exist in plaintext.
 - **Structured JSON** makes logs queryable in CloudWatch Logs Insights
   (`filter status >= 500 | stats count() by path`).
 - **Least-privilege log access:** the shipper role can only `PutLogEvents` to
   the app's log group; human read access is a separate, scoped policy.
-- Health surface: `/health` (liveness — process is up) and `/ready`
-  (readiness — dependencies reachable), consumed by Kubernetes probes and CD
+- Health surface: `/health` (liveness - process is up) and `/ready`
+  (readiness - dependencies reachable), consumed by Kubernetes probes and CD
   smoke tests (Issue #17).
 
 ---
@@ -259,4 +259,4 @@ FastAPI app
 
 Details for each area live in their own documents as the system is built:
 infrastructure, API, security, deployment, CI/CD, GitOps, monitoring,
-troubleshooting — see the `docs/` directory and `docs/decision-log.md`.
+troubleshooting - see the `docs/` directory and `docs/decision-log.md`.

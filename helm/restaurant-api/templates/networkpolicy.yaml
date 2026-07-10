@@ -1,6 +1,6 @@
 {{- if .Values.networkPolicy.enabled }}
 # Default-deny with explicit allows. Requires NetworkPolicy enforcement
-# in the CNI — enabled on the vpc-cni addon in the eks module.
+# in the CNI - enabled on the vpc-cni addon in the eks module.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -33,7 +33,7 @@ spec:
         - port: 53
           protocol: TCP
     # HTTPS only: DynamoDB (via the gateway endpoint) and STS for IRSA.
-    # The API makes no other outbound calls — anything else is denied,
+    # The API makes no other outbound calls - anything else is denied,
     # which is the exfiltration guard.
     - to:
         - ipBlock:

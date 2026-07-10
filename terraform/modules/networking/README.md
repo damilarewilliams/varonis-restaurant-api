@@ -11,7 +11,7 @@ Gateway, NAT gateway(s), and VPC endpoints. Implements the network design in
   occupy public subnets.
 - **`single_nat_gateway` flag.** Production posture is one NAT per AZ
   (AZ-fault-isolated egress, ~$32/mo each); dev flips one flag to share a
-  single NAT. The architecture stays identical — only the redundancy changes.
+  single NAT. The architecture stays identical - only the redundancy changes.
 - **/20 subnets.** The EKS VPC CNI gives every pod a VPC IP, so subnets are
   sized for pod density (4,091 IPs each), not node count.
 - **VPC endpoints.** S3 + DynamoDB gateway endpoints are free and always on;
@@ -27,8 +27,8 @@ Gateway, NAT gateway(s), and VPC endpoints. Implements the network design in
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| project | Project identifier for names/tags | string | — |
-| environment | Environment name | string | — |
+| project | Project identifier for names/tags | string | - |
+| environment | Environment name | string | - |
 | vpc_cidr | VPC CIDR block | string | `10.0.0.0/16` |
 | az_count | AZs to span (2–4) | number | `3` |
 | single_nat_gateway | Shared NAT (dev) vs per-AZ (prod) | bool | `false` |

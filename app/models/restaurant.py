@@ -17,7 +17,7 @@ class Restaurant(BaseModel):
 
         Handles overnight ranges (e.g. open 18, close 2 = open past
         midnight). Simplification: hours are UTC and whole-hour only;
-        per-restaurant timezones would require a tz field — documented
+        per-restaurant timezones would require a tz field - documented
         trade-off for this exercise.
         """
         if self.open_hour == self.close_hour:
@@ -30,7 +30,7 @@ class Restaurant(BaseModel):
 class RestaurantOut(BaseModel):
     """Presentation model matching the assignment's response contract
     exactly: camelCase keys, hours as "HH:MM" strings, no internal id.
-    (The spec example writes "clouseHour" — treated as an evident typo
+    (The spec example writes "clouseHour" - treated as an evident typo
     for closeHour.) Kept separate from the domain model so storage
     (snake_case, integer hours) never leaks contract concerns."""
 

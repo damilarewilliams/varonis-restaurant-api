@@ -1,4 +1,4 @@
-"""Business-logic tests — pure functions, no HTTP, no AWS."""
+"""Business-logic tests - pure functions, no HTTP, no AWS."""
 
 from app.models.restaurant import Restaurant
 from app.services.recommendation import recommend

@@ -1,7 +1,7 @@
 # Module: logging
 # Logs are treated as sensitive data (docs/architecture.md §logging):
 # KMS-encrypted log groups, bounded retention, and a write-only shipper
-# identity. Masking already happened in-process (app/core/logging.py) —
+# identity. Masking already happened in-process (app/core/logging.py) -
 # this module is the encrypted, access-controlled destination.
 
 locals {
@@ -10,7 +10,7 @@ locals {
 }
 
 # ---------------------------------------------------------------------------
-# Application log group — Fluent Bit ships container stdout here.
+# Application log group - Fluent Bit ships container stdout here.
 # ---------------------------------------------------------------------------
 resource "aws_cloudwatch_log_group" "app" {
   name              = local.app_log_group_name
@@ -28,7 +28,7 @@ resource "aws_cloudwatch_log_group" "app" {
 # outputs for the shipper role, so eks-depends-on-logging would be a cycle.
 
 # ---------------------------------------------------------------------------
-# IRSA role: log shipper (Fluent Bit DaemonSet) — WRITE-ONLY.
+# IRSA role: log shipper (Fluent Bit DaemonSet) - WRITE-ONLY.
 # It can create streams and put events in the app log group; it cannot
 # read logs back, cannot touch other log groups, and cannot change
 # retention. Writers write; reading is a separate human concern.

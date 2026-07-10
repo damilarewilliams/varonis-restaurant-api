@@ -2,7 +2,7 @@
 # everything else is reviewed human configuration.
 #
 # NOTE on namespaces: the chart does not template a Namespace object.
-# ArgoCD creates it via the CreateNamespace=true sync option (Issue #13) —
+# ArgoCD creates it via the CreateNamespace=true sync option (Issue #13) -
 # the namespace's lifecycle belongs to the platform, not the app chart.
 
 replicaCount: 2
@@ -16,7 +16,7 @@ image:
 serviceAccount:
   create: true
   name: restaurant-api
-  # IRSA: the api role from terraform output api_irsa_role_arn — this is
+  # IRSA: the api role from terraform output api_irsa_role_arn - this is
   # how the pod reads DynamoDB with zero stored credentials.
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::923894195596:role/varonis-restaurant-api-dev-api
@@ -38,7 +38,7 @@ extraEnv: []
 service:
   # LoadBalancer for the review window: EKS's cloud controller provisions
   # a public ELB so reviewers can curl the API without cluster access.
-  # Accepted trade-off (public, unauthenticated demo endpoint) — revert
+  # Accepted trade-off (public, unauthenticated demo endpoint) - revert
   # to ClusterIP after review; the production path is the Ingress below
   # once the AWS Load Balancer Controller is installed.
   type: LoadBalancer

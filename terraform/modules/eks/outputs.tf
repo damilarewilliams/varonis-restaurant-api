@@ -19,12 +19,12 @@ output "cluster_security_group_id" {
 }
 
 output "oidc_provider_arn" {
-  description = "ARN of the IAM OIDC provider — consumed by IRSA roles (Issue #10)"
+  description = "ARN of the IAM OIDC provider - consumed by IRSA roles (Issue #10)"
   value       = aws_iam_openid_connect_provider.this.arn
 }
 
 output "oidc_provider_url" {
-  description = "OIDC issuer URL without scheme — used in IRSA trust conditions"
+  description = "OIDC issuer URL without scheme - used in IRSA trust conditions"
   value       = replace(aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")
 }
 

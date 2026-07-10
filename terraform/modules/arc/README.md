@@ -7,7 +7,7 @@ the `runs-on` label.
 ## Design decisions
 
 - **CD jobs only** (ADR-005): CI/Terraform/build stay on GitHub-hosted
-  runners — no circular dependency on the cluster the pipeline manages.
+  runners - no circular dependency on the cluster the pipeline manages.
 - **Own namespace + service account** (not chart-created) so the IRSA
   annotation matches the iam module's trust policy exactly
   (`system:serviceaccount:arc-runners:arc-runner`).

@@ -24,6 +24,6 @@ output "private_route_table_ids" {
 }
 
 output "nat_public_ips" {
-  description = "Public IPs of the NAT gateway(s) — useful for external allowlists"
+  description = "Public IPs of the NAT gateway(s) - useful for external allowlists"
   value       = aws_eip.nat[*].public_ip
 }

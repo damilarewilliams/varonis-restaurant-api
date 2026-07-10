@@ -1,4 +1,4 @@
-# Environment outputs — consumed by CI (infrastructure verification
+# Environment outputs - consumed by CI (infrastructure verification
 # step) and by engineers. Populated as modules are enabled.
 
 output "vpc_id" {

@@ -1,6 +1,6 @@
 # AWS provider configuration.
 #
-# No credentials here — ever. Locally the provider resolves the ambient
+# No credentials here - ever. Locally the provider resolves the ambient
 # AWS profile; in CI it uses the OIDC-assumed role (Issue #14).
 #
 # default_tags stamps every resource this configuration creates, giving
@@ -19,7 +19,7 @@ provider "aws" {
   }
 }
 
-# Helm provider — targets the EKS cluster Terraform itself created.
+# Helm provider - targets the EKS cluster Terraform itself created.
 # Auth uses `aws eks get-token` (exec plugin): short-lived tokens from the
 # caller's IAM identity, no kubeconfig file dependency. This is how
 # Terraform installs in-cluster platform components (ArgoCD, ADR-004)
@@ -37,7 +37,7 @@ provider "helm" {
   }
 }
 
-# Kubernetes provider — used for the ARC runner namespace/service account
+# Kubernetes provider - used for the ARC runner namespace/service account
 # (IRSA annotation must match the iam module trust policy exactly).
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint

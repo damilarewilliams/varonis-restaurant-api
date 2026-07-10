@@ -14,7 +14,7 @@ variable "kms_key_arn" {
 }
 
 variable "retention_in_days" {
-  description = "Log retention — logs are sensitive; unbounded retention is unbounded exposure (and cost)"
+  description = "Log retention - logs are sensitive; unbounded retention is unbounded exposure (and cost)"
   type        = number
   default     = 30
 }

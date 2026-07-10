@@ -9,7 +9,7 @@ resource "aws_dynamodb_table" "this" {
   name = local.table_name
 
   # On-demand capacity: no capacity planning, pay per request, scales to
-  # zero cost when idle — the right default for a small, spiky catalog.
+  # zero cost when idle - the right default for a small, spiky catalog.
   # Provisioned capacity only wins with sustained, predictable traffic.
   billing_mode = "PAY_PER_REQUEST"
 
@@ -24,7 +24,7 @@ resource "aws_dynamodb_table" "this" {
     type = "S"
   }
 
-  # Encryption at rest with our customer-managed key — auditable usage
+  # Encryption at rest with our customer-managed key - auditable usage
   # via CloudTrail, revocable, rotated annually (kms module).
   server_side_encryption {
     enabled     = true
@@ -37,7 +37,7 @@ resource "aws_dynamodb_table" "this" {
   }
 
   # Refuse table deletion (console or terraform destroy) until the flag
-  # is flipped — data outlives infrastructure mistakes. Dev may disable.
+  # is flipped - data outlives infrastructure mistakes. Dev may disable.
   deletion_protection_enabled = var.deletion_protection
 
   tags = {
