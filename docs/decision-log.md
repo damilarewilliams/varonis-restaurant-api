@@ -247,3 +247,47 @@ variables. A compromised PR or fork workflow can assume neither role (sub
 conditions fail). The IAM-by-prefix bound means any future role this stack
 creates must follow the `<project>-<env>-` naming convention — enforced by
 the modules' `name_prefix` locals.
+
+---
+
+## ADR-009: Plan approval via GitHub Environments; ruleset bypass for the GitOps bot
+
+**Date:** 2026-07-10 · **Status:** Accepted
+
+**Context.** Terraform apply must be human-gated on the exact reviewed
+plan (assignment requirement). Separately, the delivery pipeline commits
+the values.yaml bump directly to a protected `main` — something branch
+protection normally forbids.
+
+**Options for the apply gate.**
+1. **GitHub Environments with required reviewers** — native, zero extra
+   infrastructure, audit trail on the run, and (critically) the OIDC
+   token carrying the `environment:dev-infra` claim is not issued until
+   approval, so the gate controls *credentials*, not just job order.
+2. Atlantis — PR-comment-driven plan/apply; a service to host and secure.
+3. Terraform Cloud runs — external platform beyond the AWS scope.
+4. `workflow_dispatch` manual apply — human-triggered but reviews
+   intention, not a concrete plan artifact.
+
+**Decision.** Option 1, with two environments: `dev-infra-plan`
+(unprotected — computing a diff needs no human) and `dev-infra`
+(required reviewers — mutating infrastructure does). The apply job runs
+`terraform apply tfplan` on the downloaded artifact; Terraform's own
+state-consistency check guarantees the reviewed plan is what executes.
+Full explanation: docs/plan-approval.md.
+
+**Options for the bot commit vs branch protection.**
+1. **Ruleset bypass for `github-actions[bot]`** — narrow, attributed,
+   audited; the bot's behavior is itself defined by PR-reviewed workflow
+   code.
+2. Bot opens auto-merged PRs — latency and noise, no added control.
+3. Deploy PAT with bypass — a long-lived secret where none is needed.
+
+**Decision.** Option 1.
+
+**Consequences.** Approval quality depends on reviewers actually reading
+the plan summary — the workflow renders it on the run page to make that
+easy. On a personal repository the sole maintainer approves their own
+applies; in an organization the reviewer set would exclude the author.
+The bot bypass means a compromised workflow with `contents: write` could
+push to main — mitigated by CODEOWNERS review on all workflow changes.
