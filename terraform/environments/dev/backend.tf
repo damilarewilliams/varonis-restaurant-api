@@ -9,14 +9,14 @@
 # BOOTSTRAP (one-time, before first `terraform init`) — the state
 # bucket cannot manage itself, so it is created once via CLI:
 #
-#   aws s3api create-bucket --bucket varonis-restaurant-api-tfstate \
+#   aws s3api create-bucket --bucket varonis-restaurant-api-tfstate-b \
 #       --region us-east-1
-#   aws s3api put-bucket-versioning --bucket varonis-restaurant-api-tfstate \
+#   aws s3api put-bucket-versioning --bucket varonis-restaurant-api-tfstate-b \
 #       --versioning-configuration Status=Enabled
-#   aws s3api put-bucket-encryption --bucket varonis-restaurant-api-tfstate \
+#   aws s3api put-bucket-encryption --bucket varonis-restaurant-api-tfstate-b \
 #       --server-side-encryption-configuration \
 #       '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"aws:kms"}}]}'
-#   aws s3api put-public-access-block --bucket varonis-restaurant-api-tfstate \
+#   aws s3api put-public-access-block --bucket varonis-restaurant-api-tfstate-b \
 #       --public-access-block-configuration \
 #       BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 #
@@ -28,7 +28,7 @@
 
 terraform {
   backend "s3" {
-    bucket       = "varonis-restaurant-api-tfstate"
+    bucket       = "varonis-restaurant-api-tfstate-b"
     key          = "dev/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true
