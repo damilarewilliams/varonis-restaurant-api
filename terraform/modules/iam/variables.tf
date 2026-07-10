@@ -30,6 +30,11 @@ variable "dynamodb_table_arns" {
   type        = list(string)
 }
 
+variable "dynamodb_kms_key_arn" {
+  description = "CMK encrypting the DynamoDB table — the API role needs kms:Decrypt on it to read the table"
+  type        = string
+}
+
 variable "api_namespace" {
   description = "Namespace of the API service account"
   type        = string

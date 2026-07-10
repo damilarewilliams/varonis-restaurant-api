@@ -95,7 +95,10 @@ module "iam" {
   oidc_provider_arn   = module.eks.oidc_provider_arn
   oidc_provider_url   = module.eks.oidc_provider_url
   dynamodb_table_arns = [module.dynamodb.table_arn]
-  github_repository   = "damilarewilliams/varonis-restaurant-api"
+  # The table is CMK-encrypted: reading it requires kms:Decrypt on the
+  # data key, not just dynamodb:* on the table.
+  dynamodb_kms_key_arn = module.kms_data.key_arn
+  github_repository    = "damilarewilliams/varonis-restaurant-api"
 }
 
 # ---------------------------------------------------------------------------
