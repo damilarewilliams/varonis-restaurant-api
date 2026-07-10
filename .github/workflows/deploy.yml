@@ -67,6 +67,31 @@ jobs:
           role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Verify assumed AWS identity
+        env:
+          AWS_PAGER: ""
+        run: |
+          aws sts get-caller-identity
+
+          EXPECTED_ROLE="varonis-restaurant-api-dev-gha-terraform"
+          ACTUAL_ARN=$(aws sts get-caller-identity --query Arn --output text)
+
+          echo "Authenticated as: $ACTUAL_ARN"
+          echo "$ACTUAL_ARN" | grep -q "assumed-role/$EXPECTED_ROLE/" || {
+            echo "Expected to assume $EXPECTED_ROLE, but authenticated as $ACTUAL_ARN"
+            exit 1
+          }
+      - name: Verify EKS authorization
+        env:
+          AWS_PAGER: ""
+        run: |
+          aws eks update-kubeconfig \
+            --name varonis-restaurant-api-dev \
+            --region "${{ vars.AWS_REGION }}"
+
+          kubectl auth can-i '*' '*' --all-namespaces | grep -qx yes
+          kubectl get nodes
+
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.10.5"
@@ -79,7 +104,7 @@ jobs:
       - run: terraform validate
 
       - name: Plan
-        run: terraform plan -input=true -out=tfplan
+        run: terraform plan -input=false -out=tfplan
 
       - name: Plan summary
         run: |
@@ -126,7 +151,7 @@ jobs:
           path: terraform/environments/dev
 
       - name: Apply the reviewed plan
-        run: terraform apply -input=true tfplan
+        run: terraform apply -input=false tfplan
 
       - name: Infrastructure verification
         run: |
