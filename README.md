@@ -49,6 +49,7 @@ kubectl get svc -n restaurant-api varonis-restaurant-api-dev \
 
 | | |
 |---|---|
+| ![Public API response](docs/images/public-api-response.png) | Contract response served over the public internet via the demo ELB |
 | ![ArgoCD application](docs/images/argocd-application.png) | ArgoCD: `varonis-restaurant-api-dev` Healthy/Synced, auto-sync from `main` |
 | ![ArgoCD resource tree](docs/images/argocd-resource-tree.png) | Resource tree: Deployment, Service, ConfigMap, HPA, NetworkPolicy, 2 pods Running |
 | ![Local test evidence](docs/images/local-test-evidence.png) | Local quickstart: test suite green, contract responses from the in-memory backend - no AWS required |
