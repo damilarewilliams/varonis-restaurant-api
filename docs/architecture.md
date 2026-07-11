@@ -10,7 +10,8 @@ Diagrams in this document are exported from editable draw.io sources that
 live beside this file ([application-architecture.drawio](application-architecture.drawio),
 [networking-infra.drawio](networking-infra.drawio),
 [cicd-architecture.drawio](cicd-architecture.drawio),
-[gitops-sync.drawio](gitops-sync.drawio)).
+[gitops-sync.drawio](gitops-sync.drawio),
+[eks-architecture.drawio](eks-architecture.drawio)).
 
 ## End-to-end flow
 
@@ -69,17 +70,7 @@ Design decisions:
 
 ## EKS architecture
 
-```
-EKS cluster (managed control plane, 3 AZs)
-├── Managed node group (private subnets, autoscaling min/max)
-├── Add-ons: VPC CNI (NetworkPolicy enforcement on) · CoreDNS · kube-proxy
-├── OIDC provider  ──►  IRSA (IAM Roles for Service Accounts)
-└── Namespaces
-    ├── argocd           ← ArgoCD (installed by Terraform)
-    ├── arc-runners      ← self-hosted CD runners (installed by Terraform)
-    ├── logging          ← Fluent Bit log shipper (installed by Terraform)
-    └── restaurant-api   ← the application (deployed by ArgoCD)
-```
+![EKS cluster and identity architecture](images/eks-architecture.png)
 
 - **Managed node groups** over self-managed: AWS handles AMI patching and
   drain-on-upgrade; nothing about this workload needs custom nodes.
