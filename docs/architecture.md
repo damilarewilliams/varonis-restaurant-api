@@ -6,6 +6,30 @@ A production-grade restaurant recommendation API deployed to Amazon EKS via GitO
 Application delivery and infrastructure provisioning are both fully automated;
 humans approve, pipelines execute.
 
+## Diagrams
+
+Editable draw.io sources live beside this file
+([application-architecture.drawio](application-architecture.drawio),
+[networking-infra.drawio](networking-infra.drawio),
+[cicd-architecture.drawio](cicd-architecture.drawio)).
+
+**Application architecture** - request path through the layered FastAPI
+service, its Kubernetes wrapping, and the logging pipeline:
+
+![Application architecture](images/application-architecture.png)
+
+**AWS networking (as deployed)** - single shared NAT (dev cost mode) and
+the demo ELB created by the LoadBalancer Service; the ALB/Ingress tier
+is the documented production path (see security.md trade-offs):
+
+![Networking architecture](images/networking-architecture.png)
+
+**CI/CD pipeline** - PR checks, the plan/approval/apply gate, delivery
+with the Trivy gate, GitOps handoff to ArgoCD, and in-cluster
+verification on ARC runners:
+
+![CI/CD architecture](images/cicd-architecture.png)
+
 ## End-to-end flow
 
 ```
