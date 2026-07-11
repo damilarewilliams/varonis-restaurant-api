@@ -6,36 +6,18 @@ A production-grade restaurant recommendation API deployed to Amazon EKS via GitO
 Application delivery and infrastructure provisioning are both fully automated;
 humans approve, pipelines execute.
 
-## Diagrams
-
-Editable draw.io sources live beside this file
-([application-architecture.drawio](application-architecture.drawio),
+Diagrams in this document are exported from editable draw.io sources that
+live beside this file ([application-architecture.drawio](application-architecture.drawio),
 [networking-infra.drawio](networking-infra.drawio),
-[cicd-architecture.drawio](cicd-architecture.drawio)).
-
-**Application architecture** - request path through the layered FastAPI
-service, its Kubernetes wrapping, and the logging pipeline:
-
-![Application architecture](images/application-architecture.png)
-
-**AWS networking (as deployed)** - single shared NAT (dev cost mode) and
-the demo ELB created by the LoadBalancer Service; the ALB/Ingress tier
-is the documented production path (see security.md trade-offs):
-
-![Networking architecture](images/networking-architecture.png)
-
-**CI/CD pipeline** - PR checks, the plan/approval/apply gate, delivery
-with the Trivy gate, GitOps handoff to ArgoCD, and in-cluster
-verification on ARC runners:
-
-![CI/CD architecture](images/cicd-architecture.png)
+[cicd-architecture.drawio](cicd-architecture.drawio),
+[gitops-sync.drawio](gitops-sync.drawio)).
 
 ## End-to-end flow
 
 ```
 GitHub (source of truth)
   └─> GitHub Actions CI/CD
-        ├─ App CI: lint → static analysis → (Could use pre-commit hooks as well)
+        ├─ App CI: lint → static analysis → unit tests
         ├─ Terraform: fmt → validate → plan → [manual approval] → apply → verify
         └─ Delivery: docker build → Trivy scan → push image
                       → bump Helm values.yaml → commit
@@ -65,47 +47,37 @@ GitHub (source of truth)
 ## AWS network architecture
 
 A single VPC per environment, spanning **three Availability Zones** for
-control-plane and node-group high availability.
+control-plane and node-group high availability. As deployed (dev):
 
-```
-VPC 10.0.0.0/16 (dev)
-├── AZ a                      AZ b                      AZ c
-│   ├── public  10.0.0.0/20   public  10.0.16.0/20     public  10.0.32.0/20
-│   │     · ALB / NLB (Ingress)      · NAT gateway per AZ
-│   └── private 10.0.64.0/20  private 10.0.80.0/20     private 10.0.96.0/20
-│         · EKS worker nodes (no public IPs)
-│         · runner pods, ArgoCD, application pods
-├── Internet Gateway (public subnets only)
-└── VPC endpoints: ECR (api+dkr), S3 (gateway), CloudWatch Logs, DynamoDB (gateway)
-```
+![Networking architecture](images/networking-architecture.png)
 
 Design decisions:
 
 - **Nodes only in private subnets.** Worker nodes never receive public IPs;
-  inbound traffic reaches pods exclusively through a load balancer in the
-  public subnets, created by the Ingress controller.
-- **One NAT gateway per AZ** for AZ-fault isolation of outbound traffic. (A
-  single shared NAT is the cheaper dev-mode alternative - the Terraform
-  networking module exposes this as a variable so dev can run cheap while the
-  architecture stays production-shaped.)
+  inbound traffic reaches pods only through a load balancer in the public
+  subnets (in dev, the ELB created by the LoadBalancer Service; in
+  production, an ALB via the Ingress controller).
+- **Single shared NAT gateway** (dev cost mode). One NAT per AZ is the
+  production posture for AZ-fault isolation; the networking module exposes
+  this as a variable, so it is a config change, not a redesign.
 - **VPC endpoints** for ECR, S3, CloudWatch Logs, and DynamoDB keep
   image pulls, log shipping, and data traffic on the AWS backbone instead of
   traversing NAT - lower cost, smaller attack surface.
-- **EKS API endpoint**: public with CIDR allowlist in dev (lets GitHub-hosted
-  runners run Terraform without VPN infrastructure); private-only is the
-  hardened option and is a module variable, not a redesign.
+- **EKS API endpoint**: public and open in dev (documented TODO: narrow the
+  CIDR); private-only is the hardened option and is a module variable, not a
+  redesign.
 
 ## EKS architecture
 
 ```
 EKS cluster (managed control plane, 3 AZs)
 ├── Managed node group (private subnets, autoscaling min/max)
-├── Add-ons: VPC CNI · CoreDNS · kube-proxy · EBS CSI driver
+├── Add-ons: VPC CNI (NetworkPolicy enforcement on) · CoreDNS · kube-proxy
 ├── OIDC provider  ──►  IRSA (IAM Roles for Service Accounts)
 └── Namespaces
     ├── argocd           ← ArgoCD (installed by Terraform)
     ├── arc-runners      ← self-hosted CD runners (installed by Terraform)
-    ├── ingress          ← AWS Load Balancer Controller
+    ├── logging          ← Fluent Bit log shipper (installed by Terraform)
     └── restaurant-api   ← the application (deployed by ArgoCD)
 ```
 
@@ -116,11 +88,17 @@ EKS cluster (managed control plane, 3 AZs)
   allows DynamoDB read on one table; the runner pods get only what CD jobs
   need. No node-level instance-profile permissions, no static keys in-cluster.
 - **Namespace isolation** separates platform components (argocd, arc-runners,
-  ingress) from the workload; RBAC and NetworkPolicies are scoped per
+  logging) from the workload; RBAC and NetworkPolicies are scoped per
   namespace (Issue #16).
-- The application ships as Deployment + Service + Ingress + ConfigMap + Secret
-  + HPA, with resource requests/limits, liveness/readiness probes, and rolling
-  updates - packaged in the Helm chart (Issue #12).
+- The application ships as Deployment + Service + ConfigMap + HPA +
+  NetworkPolicy, with resource requests/limits, liveness/readiness probes,
+  and rolling updates - packaged in the Helm chart (Issue #12). An Ingress
+  template exists but is disabled until the AWS Load Balancer Controller is
+  installed.
+
+The application's request path, layering, and Kubernetes wrapping:
+
+![Application architecture](images/application-architecture.png)
 
 ## GitOps with ArgoCD
 
@@ -130,21 +108,7 @@ rather than CI pushing manifests with `kubectl`. This means GitHub Actions
 never holds cluster-admin credentials - the deployment trust boundary stays
 inside AWS.
 
-```
-                        ┌─────────────── EKS cluster ────────────────┐
-GitHub repo             │  argocd namespace                          │
- └─ helm/restaurant-api │   ├─ repo-server ── clones repo, renders   │
-     ├─ Chart.yaml   ◄──┼───┤               Helm chart to manifests  │
-     ├─ values.yaml     │   ├─ application-controller ── compares    │
-     └─ templates/      │   │   desired (Git) vs live (cluster),     │
-                        │   │   syncs drift                          │
-CI commits new          │   ├─ api-server / UI ── status, manual ops │
-image tag to            │   └─ redis ── state cache                  │
-values.yaml ────────►   │                                            │
-                        │  restaurant-api namespace                  │
-                        │   └─ Deployment / Service / Ingress / HPA  │
-                        └────────────────────────────────────────────┘
-```
+![GitOps sync flow](images/gitops-sync.png)
 
 **Core components.** The *repo-server* clones this repository and renders the
 Helm chart into plain manifests. The *application-controller* is the
@@ -171,23 +135,10 @@ end-to-end from `terraform apply` with zero manual `kubectl` steps.
 
 ## CI/CD pipeline architecture
 
-```
-PR opened ──► CI: checkout → python setup → deps → lint → static analysis → unit tests
-              (+ terraform fmt/validate on infra paths)          [GitHub-hosted]
+PR checks, the plan/approval/apply gate, delivery with the Trivy gate, the
+GitOps handoff to ArgoCD, and in-cluster verification on ARC runners:
 
-merge to main
-  ├─ infra changed? ──► terraform init → plan → upload plan artifact
-  │                     → plan summary on run page
-  │                     → ⏸ GitHub Environment "dev-infra": required reviewer
-  │                     → apply THE UPLOADED PLAN artifact → verify outputs
-  │                                                              [GitHub-hosted]
-  ├─ app changed?  ──► docker build → Trivy scan (fail on HIGH/CRITICAL)
-  │                     → push to registry → update values.yaml image.tag
-  │                     → commit [skip ci] → push                [GitHub-hosted]
-  │                          └──► ArgoCD sync
-  └─ CD verify     ──► trigger/wait ArgoCD sync → kubectl rollout status
-                        → /health + /ready checks → smoke tests  [ARC, in-cluster]
-```
+![CI/CD architecture](images/cicd-architecture.png)
 
 **Plan/apply separation.** The plan job writes `tfplan` as a workflow artifact
 and posts a human-readable summary. The apply job targets a **GitHub
